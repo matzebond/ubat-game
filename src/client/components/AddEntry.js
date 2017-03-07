@@ -2,15 +2,21 @@ import React from "react";
 import { WithContext as ReactTags } from 'react-tag-input';
 
 export default class AddEntry extends React.Component {
-    constructor() {
-        super();
-
-        this.name = '';
+    constructor(props) {
+        super(props);
 
         this.state = {
-            tags: [  ],
-            suggestions: ["Movie", "Series", "Politician", "Star", "Fictional", "Game of Thrones", "Sport"]
+            text: "Bill Gates",
+            tags: [ {id: 1, text: "Programmer" }],
+            suggestions: this.props.allTags
         };
+
+        this.handleTagDelete = this.handleTagDelete.bind(this);
+        this.handleTagAddition = this.handleTagAddition.bind(this);
+        this.handleTagDrag = this.handleTagDrag.bind(this);
+        this.handleTextChange = this.handleTextChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleAbort = this.handleAbort.bind(this);
     }
 
     handleTagDelete(i) {
@@ -39,36 +45,48 @@ export default class AddEntry extends React.Component {
         this.setState({ tags: tags });
     }
 
-    handleNameChange(e) {
-        this.name = e.target.value;
-        console.log(this.name);
+    handleTextChange(e) {
+        this.setState({text: e.target.value});
     }
 
     handleSubmit() {
-        console.log("submit: " + this.name);
+        let {tags, text} = this.state;
+        tags = tags.map(tag => tag.text);
+
+        this.props.sendEntry({text, tags});
     }
 
     handleAbort() {
-        console.log("abort: " + this.name);
+        console.log(this.match);
     }
 
     render() {
         let tags = this.state.tags;
         let suggestions = this.state.suggestions;
+
         return (
             <div>
                 <p> Insert word: </p>
-                <input className="form-control" onChange={this.handleNameChange.bind(this)}
-                    placeholder={'Enter name'}/>
+                <input className="form-control input-lg" value={this.state.text} onChange={this.handleTextChange} placeholder={'Enter phrase'}/>
                 <ReactTags tags={tags}
                     suggestions={suggestions}
                     minQueryLength={1}
-                    handleDelete={this.handleTagDelete.bind(this)}
-                    handleAddition={this.handleTagAddition.bind(this)}
-                    handleDrag={this.handleTagDrag.bind(this)} />
+                    handleDelete={this.handleTagDelete}
+                    handleAddition={this.handleTagAddition}
+                    handleDrag={this.handleTagDrag}
+                    classNames={{
+                        tags: 'tagsClass',
+                        tagInput: 'tagInputClass',
+                        tagInputField: 'form-control input-sm',
+                        selected: 'selectedClass',
+                        tag: 'tagClass',
+                        remove: 'removeClass',
+                        suggestions: 'suggestionsClass'
+                    }}
+                />
                 <div>
-                    <button className="btn btn-success" onClick={this.handleSubmit.bind(this)}>Save</button>
-                    <button className="btn btn-danger" onClick={this.handleAbort.bind(this)}>Cancel</button>
+                    <button className="btn btn-success" onClick={this.handleSubmit}>Save</button>
+                    <button className="btn btn-danger" onClick={this.handleAbort}>Cancel</button>
                 </div>
             </div>
         );
