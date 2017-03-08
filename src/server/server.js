@@ -37,12 +37,7 @@ app.get('/entry/list', (request, response) => {
     });
 });
 
-app.get('/entry/:id', (request, response) => {
-    myDB.getEntry( request.params.id, (entry) => {
-        response.json(entry);
-    });
-});
-
+// when successfull return the created entry (/entry/:id) under entry: and all current tags (/tags/list) under tags:
 app.post('/entry/add', (request, response) =>  {
     console.log('post at /entry/add');
     console.log(JSON.stringify(request.body));
@@ -54,9 +49,37 @@ app.post('/entry/add', (request, response) =>  {
             response.status(400).send('Entry already exists.').end();
             return;
         }
-        response.status(200).json({entryID});
+        myDB.getEntry(entryID, (entry) => {
+            if (!entry) {
+                response.status(400).send("Couldn't create entry.").end();
+                return;
+            }
+            myDB.listTags(tags => {
+                response.json({entry, tags});
+            });
+        });
     });
 });
+
+
+app.post('/entry/update', (request, response) => {
+    console.log('post at /entry/add');
+    console.log(JSON.stringify(request.body));
+
+    let id = request.body.text;
+    let text = request.body.text;
+    let tags = request.body.tags;
+};
+
+
+// when an entry with the given id is found return the name (name:) the id (id:) and all tags associated with this entry (tags:)
+app.get('/entry/:id', (request, response) => {
+    myDB.getEntry( request.params.id, (entry) => {
+        response.json(entry);
+    });
+});
+
+
 
 let server = app.listen(port, (err) => {
     if (err) {

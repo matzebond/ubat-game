@@ -64,24 +64,7 @@ class EntryStore {
             .then(([body, res]) => {
                 let jsResult = JSON.parse(body);
                 console.log(jsResult);
-                // resolve(jsResult);
-            });
-    }
-
-    sendEntry(entry) {
-        const stringified = JSON.stringify(entry);
-        console.log('sending entry');
-        console.log(stringified);
-        request.post(backendAddr + "/entry/add")
-            .headers({
-                "Content-Type": "application/json",
-                "Content-Length": Buffer.from(stringified).byteLength
-            })
-            .send(stringified)
-            .then(([body, res]) => {
-                let jsResult = JSON.parse(body);
-                console.log(jsResult);
-                // resolve(jsResult);
+                this.tags.replace(jsResult.tags.map(e => new Tag(e)));
             });
     }
 }
