@@ -3,7 +3,6 @@ var path = require('path');
 var fs = require('fs');
 
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var WebpackShellPlugin = require('webpack-shell-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
@@ -53,11 +52,7 @@ var config = [
             new webpack.BannerPlugin( {
                 banner: 'require("source-map-support").install();',
                 raw: true,
-                entryOnly: false }),
-            new WebpackShellPlugin({
-                // onBuildStart:['echo "Webpack Start"'],
-                // onBuildExit:[`node ${BUILD_DIR}/server.js`]
-            })
+                entryOnly: false })
         ],
         devtool: 'sourcemap'
 

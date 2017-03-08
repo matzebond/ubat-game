@@ -61,17 +61,17 @@ exports.addEntry = function ({text, tags}, callback = () => {}) {
 
 exports.listTags = function (callback = () => {}) {
     db.serialize(() => {
-        db.all(`SELECT t.text, COUNT(*) AS count
+        db.all(`SELECT t.id, t.text, COUNT(*) AS count
                 FROM tags AS t
                 JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
                 GROUP BY t.id
-                SORT BY count`,
+                ORDER BY count DESC`,
                function (err, rows) {
                    if (err) {
                        console.log(err);
                        return;
                    }
-                   let tags = rows.map((row) => ({text: row.text, count: row.count}));
+                   let tags = rows.map((row) => ({id: row.id, text: row.text, count: row.count}));
                    callback(tags);
                });
     });
@@ -84,7 +84,7 @@ exports.listEntries = function (callback = () => {}) {
                 JOIN entry_tag_map AS etm ON (e.id = etm.entry_id)
                 JOIN tags AS t ON (etm.tag_id = t.id)
                 GROUP BY e.id
-                SORT BY e.text`,
+                ORDER BY e.text`,
                function (err, rows) {
                    if (err) {
                        console.log(err);
@@ -111,6 +111,10 @@ exports.getEntry = function (entryID, callback = () => {}) {
                function (err, row) {
                    if (err) {
                        console.log(err);
+                       return;
+                   }
+                   if (!row) {
+                       callback(null);
                        return;
                    }
                    let id = row.id;

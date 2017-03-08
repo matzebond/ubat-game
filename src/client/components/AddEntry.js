@@ -1,14 +1,15 @@
 import React from "react";
 import { WithContext as ReactTags } from 'react-tag-input';
+import { observer } from "mobx-react";
 
+@observer
 export default class AddEntry extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             text: "Bill Gates",
-            tags: [ {id: 1, text: "Programmer" }],
-            suggestions: this.props.allTags
+            tags: [ {id: 1, text: "Programmer" }]
         };
 
         this.handleTagDelete = this.handleTagDelete.bind(this);
@@ -17,6 +18,8 @@ export default class AddEntry extends React.Component {
         this.handleTextChange = this.handleTextChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleAbort = this.handleAbort.bind(this);
+
+        this.props.store.requestTags();
     }
 
     handleTagDelete(i) {
@@ -53,7 +56,8 @@ export default class AddEntry extends React.Component {
         let {tags, text} = this.state;
         tags = tags.map(tag => tag.text);
 
-        this.props.sendEntry({text, tags});
+        this.props.onSubmit({text, tags});
+        this.setState({text: "", tags: []});
     }
 
     handleAbort() {
@@ -61,15 +65,15 @@ export default class AddEntry extends React.Component {
     }
 
     render() {
-        let tags = this.state.tags;
-        let suggestions = this.state.suggestions;
+        const {tags, text} = this.state;
+        const allTags = this.props.store.tagNames;
 
         return (
             <div>
                 <p> Insert word: </p>
-                <input className="form-control input-lg" value={this.state.text} onChange={this.handleTextChange} placeholder={'Enter phrase'}/>
+                <input className="form-control input-lg" value={text} onChange={this.handleTextChange} placeholder={'Enter phrase'}/>
                 <ReactTags tags={tags}
-                    suggestions={suggestions}
+                    suggestions={allTags}
                     minQueryLength={1}
                     handleDelete={this.handleTagDelete}
                     handleAddition={this.handleTagAddition}

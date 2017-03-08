@@ -21,17 +21,23 @@ app.use(allowCrossDomain);
 
 app.get('/tag/list', (request, response) => {
     myDB.listTags((tags) => {
-        response.json({tags});
+        response.json(tags);
     });
 });
 
-app.get('/entry/:id', (request, response) => {
-    myDB.getEntry( request.params.id, (entry) => {
+app.get('/tag/:id', (request, response) => {
+    myDB.getTag( request.params.id, (entry) => {
         response.json(entry);
     });
 });
 
 app.get('/entry/list', (request, response) => {
+    myDB.listEntries( (entries) => {
+        response.json(entries);
+    });
+});
+
+app.get('/entry/:id', (request, response) => {
     myDB.getEntry( request.params.id, (entry) => {
         response.json(entry);
     });
