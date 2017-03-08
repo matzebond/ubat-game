@@ -54,7 +54,7 @@ var config = [
             new webpack.optimize.OccurenceOrderPlugin(),
             new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
         ],
-        devtool: debug ? "inline-sourcemap" : null,
+        devtool: debug ? "cheap-eval-source-map" : null,
     },
     // {
     //     name: 'server',

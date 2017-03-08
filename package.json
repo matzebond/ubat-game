@@ -26,11 +26,16 @@
     "babel-preset-react": "^6.23.0",
     "babel-preset-stage-0": "^6.22.0",
     "html-webpack-plugin": "^2.28.0",
-    "webpack-dev-server": "^2.4.1"
+    "nodemon": "^1.11.0",
+    "npm-run-all": "^4.0.2",
+    "webpack-dev-server": "^2.4.1",
+    "webpack-shell-plugin": "^0.5.0"
   },
   "scripts": {
     "dev": "webpack-dev-server --content-base ./dist --history-api-fallback --inline ",
     "build": "webpack && webpack --config ./webpack.config.backend.js",
-    "backend": "webpack --config ./webpack.config.backend.js && node ./build/server.js"
+    "watch:backend": "webpack --watch --config ./webpack.config.backend.js",
+    "nodemon:backend": "nodemon \"./build/server.js\" --watch \"./build\"",
+    "backend": "npm-run-all --parallel watch:backend nodemon:backend"
   }
 }

@@ -3,6 +3,7 @@ var path = require('path');
 var fs = require('fs');
 
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var WebpackShellPlugin = require('webpack-shell-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
@@ -27,28 +28,36 @@ var config = [
         name: 'server',
         entry: SERVER_DIR + '/server.js',
         target: 'node',
+        // node: {
+        //     __filename: true,
+        //     __dirname: true,
+        // },
         output: {
             path: BUILD_DIR,
             filename: 'server.js'
         },
         externals: nodeModules,
-        // module: {
-        //     loaders : [
-        //         {
-        //             test: /\.jsx?$/,
-        //             exclude: /(node_modules|bower_components)/,
-        //             loader: 'babel-loader',
-        //             query: {
-        //                 "presets": ["es2017-node7"],
-        //             }
-        //         }
-        //     ]
-        // },
+        module: {
+            loaders : [
+                {
+                    test: /\.jsx?$/,
+                    exclude: /(node_modules|bower_components)/,
+                    loader: 'babel-loader',
+                    query: {
+                        "presets": ["es2017-node7"],
+                    }
+                }
+            ]
+        },
         plugins: [
             new webpack.BannerPlugin( {
                 banner: 'require("source-map-support").install();',
                 raw: true,
-                entryOnly: false })
+                entryOnly: false }),
+            new WebpackShellPlugin({
+                // onBuildStart:['echo "Webpack Start"'],
+                // onBuildExit:[`node ${BUILD_DIR}/server.js`]
+            })
         ],
         devtool: 'sourcemap'
 
