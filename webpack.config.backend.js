@@ -25,7 +25,7 @@ fs.readdirSync('node_modules')
 var config = [
     {
         name: 'server',
-        entry: SERVER_DIR + '/server.js',
+        entry: SERVER_DIR + '/server_promises.js',
         target: 'node',
         // node: {
         //     __filename: true,
@@ -44,6 +44,7 @@ var config = [
                     loader: 'babel-loader',
                     query: {
                         "presets": ["es2017-node7"],
+                        plugins: ['transform-decorators-legacy', 'transform-class-properties'],
                     }
                 }
             ]

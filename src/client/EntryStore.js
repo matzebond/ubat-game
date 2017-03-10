@@ -1,31 +1,10 @@
 import { observable, computed } from "mobx";
 import request from "es6-request";
 
+import Tag from "../data/Tag";
+import Entry from "../data/Entry";
+
 const backendAddr = "http://localhost:13750";
-
-class Entry {
-    @observable id;
-    @observable text;
-    @observable tags;
-
-    constructor({id, text, tags}) {
-        this.id = id;
-        this.text = text;
-        this.tags = tags;
-    }
-}
-
-class Tag {
-    @observable id;
-    @observable text;
-    @observable count;
-
-    constructor({id, text, count}) {
-        this.id = id;
-        this.text = text;
-        this.count = count;
-    }
-}
 
 class EntryStore {
     @observable entries = [new Entry ({id:1, text:"DUMMY_ENTRY", tags:["DUMMY_TAG"]})];
@@ -39,22 +18,37 @@ class EntryStore {
         return this.tags.map(tag => tag.text);
     };
 
+    constructor() {
+        this.sendEntry = this.sendEntry.bind(this);
+        this.requestTags = this.requestTags.bind(this);
+
+        this.requestTags();
+        // this.sendEntry(new Entry({text:"matzeiaetaei", tags: ["Ich bin so cool"]}));
+
+        setTimeout( () => {
+            console.log(this.tagNames);
+        }, 2000);
+
+    }
+
     requestTags() {
         request.get(backendAddr + "/tag/list")
             .then(([body, res]) => {
                 let jsResult = JSON.parse(body);
-                console.log(jsResult);
-                // resolve(jsResult);
-                console.log(this.tags);
+                console.log(this);
+                console.log(JSON.stringify(this.tags));
                 this.tags.replace(jsResult.map(e => new Tag(e)));
-                console.log(this.tags);
+                console.log(JSON.stringify(this.tags));
+            })
+            .catch(err => {
+                console.log(err);
             });
     }
 
-    sendEntry(entry) {
-        const stringified = JSON.stringify(entry);
+    sendEntry(entry, callback = () => {}) {
         console.log('sending entry');
-        console.log(stringified);
+        console.log(entry);
+        const stringified = JSON.stringify(entry);
         request.post(backendAddr + "/entry/add")
             .headers({
                 "Content-Type": "application/json",
@@ -62,9 +56,20 @@ class EntryStore {
             })
             .send(stringified)
             .then(([body, res]) => {
-                let jsResult = JSON.parse(body);
-                console.log(jsResult);
-                this.tags.replace(jsResult.tags.map(e => new Tag(e)));
+                if (res.statusCode !== 200) {
+                    console.log("entyAdd: status not 200" + body);
+                    callback(body);
+                    return undefined;
+                    // reject(body);
+                }
+                const jsResult = JSON.parse(body);
+                const tags = jsResult.tags.map(e => new Tag(e));
+                this.tags.replace(tags);
+                callback();
+            })
+            .catch(err => {
+                console.log(err);
+                callback(err);
             });
     }
 }
