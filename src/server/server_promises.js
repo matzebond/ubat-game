@@ -62,7 +62,7 @@ app.get("/tag/text/:text", (req, res) => {
         })
         .catch(err => {
             console.log(err);
-            res.status(400).send(`no tag with text ${tagText}`).end();
+            res.status(400).send(`no tag with text "${tagText}"`).end();
             return;
         });
 });
@@ -103,7 +103,7 @@ app.post("/entry/add", async (req, res) => {
           .catch(err => {
               console.log("insert into entries");
               console.log(err);
-              res.status(400).send(`duplicated entry with text ${entry.text} `).end();
+              res.status(400).send(`duplicated entry with text "${entry.text}" `).end();
           })
     // for every specified tag: insert tag when new and create relation to the entry
           .then((entryID) => {
@@ -173,7 +173,7 @@ app.get("/entry/text/:text", (req, res) => {
         })
         .catch(err => {
             console.log(err);
-            res.status(400).send(`no entry with text ${entryText}`).end();
+            res.status(400).send(`no entry with text "${entryText}"`).end();
             return;
         });
 });

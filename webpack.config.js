@@ -9,22 +9,10 @@ var debug = process.env.NODE_ENV !== "production";
 var APP_DIR = path.resolve(__dirname, 'src/client');
 var DIST_DIR = path.resolve(__dirname, 'dist');
 
-var SERVER_DIR = path.resolve(__dirname, 'src/server');
-var BUILD_DIR = path.resolve(__dirname, 'build');
-
 let htmlPlug = new HtmlWebpackPlugin({
     template: APP_DIR + '/index.template.ejs',
     inject: 'body'
 });
-
-var nodeModules = {};
-fs.readdirSync('node_modules')
-    .filter(function(x) {
-        return ['.bin'].indexOf(x) === -1;
-    })
-    .forEach(function(mod) {
-        nodeModules[mod] = 'commonjs ' + mod;
-    });
 
 var config = {
     name: 'client',
@@ -38,11 +26,11 @@ var config = {
         loaders: [
             {
                 test: /\.jsx?$/,
-                exclude: /(node_modules|bower_components)/,
+                exclude: /(node_modules)/,
                 loader: 'babel-loader',
                 query: {
                     presets: ["react", "es2015", "stage-0"],
-                    plugins: ['transform-decorators-legacy', 'transform-class-properties']
+                    plugins: ['transform-decorators-legacy', 'transform-class-properties'] // needed for mobX
                 }
             },
         ]

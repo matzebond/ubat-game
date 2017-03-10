@@ -23,22 +23,13 @@ class EntryStore {
         this.requestTags = this.requestTags.bind(this);
 
         this.requestTags();
-        // this.sendEntry(new Entry({text:"matzeiaetaei", tags: ["Ich bin so cool"]}));
-
-        setTimeout( () => {
-            console.log(this.tagNames);
-        }, 2000);
-
     }
 
     requestTags() {
         request.get(backendAddr + "/tag/list")
             .then(([body, res]) => {
                 let jsResult = JSON.parse(body);
-                console.log(this);
-                console.log(JSON.stringify(this.tags));
                 this.tags.replace(jsResult.map(e => new Tag(e)));
-                console.log(JSON.stringify(this.tags));
             })
             .catch(err => {
                 console.log(err);
@@ -57,7 +48,6 @@ class EntryStore {
             .send(stringified)
             .then(([body, res]) => {
                 if (res.statusCode !== 200) {
-                    console.log("entyAdd: status not 200" + body);
                     callback(body);
                     return undefined;
                     // reject(body);
@@ -68,7 +58,6 @@ class EntryStore {
                 callback();
             })
             .catch(err => {
-                console.log(err);
                 callback(err);
             });
     }
