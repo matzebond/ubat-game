@@ -48,16 +48,19 @@ class EntryStore {
             .send(stringified)
             .then(([body, res]) => {
                 if (res.statusCode !== 200) {
+                    console.log(body);
                     callback(body);
-                    return undefined;
                     // reject(body);
+                    return;
                 }
+
                 const jsResult = JSON.parse(body);
                 const tags = jsResult.tags.map(e => new Tag(e));
                 this.tags.replace(tags);
                 callback();
             })
             .catch(err => {
+                console.log(err);
                 callback(err);
             });
     }

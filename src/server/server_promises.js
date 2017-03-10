@@ -40,7 +40,7 @@ const getTagList = () => {
 app.get("/tag/list", (req, res) => {
     getTagList()
         .then(tags => {
-            res.json(tags);
+            res.json(tags).end();
         })
         .catch(err => {
             console.log(err);
@@ -58,12 +58,11 @@ app.get("/tag/text/:text", (req, res) => {
             GROUP BY tag_id`, tagText+'%')
         .then(rows => {
             const tags = rows.map(row => new Tag(row));
-            res.json(tags);
+            res.json(tags).end();
         })
         .catch(err => {
             console.log(err);
-            res.status(400).send(`no tag with text "${tagText}"`).end();
-            return;
+            res.status(500).end();
         });
 });
 
@@ -74,21 +73,39 @@ app.get("/tag/:id", (req, res) => {
             WHERE tag_id = ?
             GROUP BY tag_id`, tagID)
         .then(row => {
+            if (!row) {
+                res.status(404).send(`no tag with id ${tagID}`).end();
+                return;
+            }
             const tag = new Tag(row);
-            res.json(tag);
+            res.json(tag).end();
         })
         .catch(err => {
-            res.status(400).send(`no tag with id ${tagID}`).end();
-            return;
+            console.log(err);
+            res.status(500).end();
         });
 });
 
 
 
-app.post("/entry/add", async (req, res) => {
+app.post("/entry/add", (req, res) => {
     console.log(req.body);
 
-    const entry = new Entry(req.body);
+    let entry;
+
+    try {
+        entry = new Entry(req.body);
+    } catch (e) {
+        console.log("wrong format");
+        res.status(400).send("wrong format").end();
+        return;
+    }
+
+    if(entry.tags.length === 0) {
+        console.log("no tags");
+        res.status(400).send("no tags").end();
+        return;
+    }
 
     // try inserting entry.text as new entry
     db.run(`INSERT INTO entries VALUES (NULL, ?)`, entry.text)
@@ -100,10 +117,11 @@ app.post("/entry/add", async (req, res) => {
               return stmt.lastID;
           })
     // catch error when entry already exists, and send message + error code
+    // Attention: db error catches as duplicate error
           .catch(err => {
-              console.log("insert into entries");
-              console.log(err);
-              res.status(400).send(`duplicated entry with text "${entry.text}" `).end();
+              console.log("duplicate entry");
+              res.status(409).send(`duplicate: entry with text "${entry.text}" already exists`).end();
+              throw null;
           })
     // for every specified tag: insert tag when new and create relation to the entry
           .then((entryID) => {
@@ -113,19 +131,8 @@ app.post("/entry/add", async (req, res) => {
 
                   // otherwise insert new tag
                   if (!tagID) {
-                      tagID = await db.run(`INSERT INTO tags VALUES (NULL, ?)`, tag)
-                          .then( (stmt) => {
-                              if (!stmt.lastID) {
-                                  reject("No lastID after insert into tags.");
-                              }
-                              return (stmt.lastID);
-                          })
-                          .catch(err => {
-                              console.log("insert into tags");
-                              console.log(err);
-                              res.status(500).send("internal server error").end();
-                              return;
-                          });
+                      let stmt = await db.run(`INSERT INTO tags VALUES (NULL, ?)`, tag);
+                      tagID = stmt.lastID;
                   }
                   else{
                       tagID = tagID.id;
@@ -134,13 +141,16 @@ app.post("/entry/add", async (req, res) => {
                   db.run(`INSERT INTO entry_tag_map VALUES (?,?)`, entryID, tagID);
               }));
           })
-        .then(() => {
+        .then(async () => {
             //return the created entry and all tags
-            getTagList().then(tags => {
-                res.json({entry, tags});
-            }).catch(err => {
+            const tags = await getTagList();
+            res.json({entry, tags}).end();
+        })
+        .catch(err => {
+            if (err) {
                 console.log(err);
-            });
+                res.status(500).end();
+            }
         });
 });
 
@@ -149,46 +159,49 @@ app.get("/entry/list", (req, res) => {
             FROM entry_tag_view
             GROUP BY entry_id`)
         .then(rows => {
-            const entries = rows.map(row => {
-                row.tags = row.tags.split(';');
-                return new Entry(row);
-            });
-            res.json(entries);
+            const entries = rows.map(row => Entry.fromDB(row));
+            res.json(entries).end();
         })
         .catch(err => {
             console.log(err);
-            res.status(500).send("internal server error").end();
+            res.status(500).end();
         });
 });
 
 app.get("/entry/text/:text", (req, res) => {
     const entryText = req.params.text;
-    db.all(`SELECT entry_id AS id, entry_text AS text, COUNT(*) AS count
+    db.all(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_text, ';') AS tags
             FROM entry_tag_view
             WHERE entry_text LIKE ?
             GROUP BY entry_id`, entryText+'%')
         .then(rows => {
-            const entrys = rows.map(row => new Entry(row));
-            res.json(entrys);
+            const entrys = rows.map(row => Entry.fromDB(row));
+            res.json(entrys).end();
         })
         .catch(err => {
             console.log(err);
-            res.status(400).send(`no entry with text "${entryText}"`).end();
-            return;
+            res.status(500).end();
         });
 });
 
 app.get("/entry/:id", (req, res) => {
     const entryID = req.params.id;
-    db.get(`SELECT entry_id AS id, entry_text AS text, COUNT(*) AS count
+    db.get(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_text, ';') AS tags
             FROM entry_tag_view
-            WHERE entry_id = ?`, entryID)
+            WHERE entry_id = ?
+            GROUP BY entry_id`, entryID)
         .then(row => {
-            const entry = new Entry(row);
-            res.json(entry);
+            if (!row) {
+                res.status(404).send(`no entry with id ${entryID}`).end();
+                return;
+            }
+            console.log(row);
+            const entry = Entry.fromDB(row);
+            res.json(entry).end();
         })
         .catch(err => {
-            res.status(400).send(`no entry with id ${entryID}`).end();
+            console.log(err);
+            res.status(500).end();
         });
 });
 

@@ -60,7 +60,7 @@ export default class AddEntry extends React.Component {
 
         this.props.onSubmit({text, tags}, this.submitCallback);
 
-        this.setState({text: "", tags: [], send: false, lastText: text});
+        this.setState({send: false, lastText: text});
     }
 
     handleAbort() {
@@ -69,10 +69,11 @@ export default class AddEntry extends React.Component {
 
     submitCallback(err) {
         if(err) {
-            this.setState({send: true, submitErr: true});
+            console.log(err);
+            this.setState({text: "", tags: [], send: true, submitErr: true});
         }
         else {
-            this.setState({send: true, submitErr: false});
+            this.setState({text: "", tags: [], send: true, submitErr: false});
         }
     }
 
@@ -106,6 +107,7 @@ export default class AddEntry extends React.Component {
                     <Button bsStyle="success" onClick={this.handleSubmit}>Save</Button>
                     <Button bsStyle="danger" onClick={this.handleAbort}>Back</Button>
                 </div>
+
                 {send ?
                     submitErr ?
                     <Alert bsStyle="danger">
