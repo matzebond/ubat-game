@@ -1,10 +1,14 @@
 import { observable, computed } from "mobx";
-import request from "es6-request";
+require('es6-promise').polyfill();
+import axios from "axios";
 
 import Tag from "../data/Tag";
 import Entry from "../data/Entry";
 
-const backendAddr = "http://localhost:13750";
+const backendAddr = "http://192.168.0.19:13750";
+
+axios.defaults.baseURL = backendAddr;
+axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 class EntryStore {
     @observable entries = [new Entry ({id:1, text:"DUMMY_ENTRY", tags:["DUMMY_TAG"]})];
@@ -26,10 +30,19 @@ class EntryStore {
     }
 
     requestTags() {
-        request.get(backendAddr + "/tag/list")
-            .then(([body, res]) => {
-                let jsResult = JSON.parse(body);
-                this.tags.replace(jsResult.map(e => new Tag(e)));
+        axios.get("/tag/list")
+            .then(res => {
+                this.tags.replace(res.data.map(e => new Tag(e)));
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    requestEntries() {
+        axios.get("/entry/list")
+            .then(res => {
+                this.entries.replace(res.data.map(e => new Entry(e)));
             })
             .catch(err => {
                 console.log(err);
@@ -37,31 +50,22 @@ class EntryStore {
     }
 
     sendEntry(entry, callback = () => {}) {
-        console.log('sending entry');
-        console.log(entry);
-        const stringified = JSON.stringify(entry);
-        request.post(backendAddr + "/entry/add")
-            .headers({
-                "Content-Type": "application/json",
-                "Content-Length": Buffer.from(stringified).byteLength
-            })
-            .send(stringified)
-            .then(([body, res]) => {
-                if (res.statusCode !== 200) {
-                    console.log(body);
-                    callback(body);
+        axios.post("/entry/add", entry)
+            .then(res => {
+                if (res.status !== 200) {
+                    console.log(res);
+                    callback(res.data);
                     // reject(body);
                     return;
                 }
 
-                const jsResult = JSON.parse(body);
-                const tags = jsResult.tags.map(e => new Tag(e));
+                const tags = res.data.tags.map(e => new Tag(e));
                 this.tags.replace(tags);
                 callback();
             })
             .catch(err => {
-                console.log(err);
-                callback(err);
+                console.log(err.response);
+                callback(err.response);
             });
     }
 }
