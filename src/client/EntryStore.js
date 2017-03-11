@@ -22,6 +22,12 @@ class EntryStore {
         return this.tags.map(tag => tag.text);
     };
 
+    @computed get popularTags() {
+        return this.tags.sort((a, b) => {
+            return b.count - a.count;
+        });
+    }
+
     constructor() {
         this.sendEntry = this.sendEntry.bind(this);
         this.requestTags = this.requestTags.bind(this);

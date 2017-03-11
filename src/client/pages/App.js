@@ -3,7 +3,7 @@ import React from "react";
 import { Route, Switch, Redirect } from "react-router-dom";
 
 import MainMenu from "./MainMenu";
-import Game from "./Game";
+import GameMenu from "./GameMenu";
 import ContentView from "./ContentView";
 
 import Header from "../components/Header";
@@ -16,7 +16,7 @@ export default class App extends React.Component {
                 <Header />
                 <div>
                     <Switch>
-                        <Route path="/game" component={Game}/>
+                        <Route path="/game" component={GameMenu}/>
                         <Route path="/content" component={ContentView}/>
                         <Route component={MainMenu}/>
                     </Switch>
