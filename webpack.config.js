@@ -43,7 +43,14 @@ var config = {
         new webpack.optimize.OccurenceOrderPlugin(),
         new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
     ],
-    devtool: debug ? "cheap-eval-source-map" : null
+    devtool: debug ? "cheap-eval-source-map" : null,
+    devServer: {
+        contentBase: DIST_DIR,
+        host: '0.0.0.0',
+        port: 8080,
+        inline:true,
+        historyApiFallback: true
+    }
 };
 
 module.exports = config;
