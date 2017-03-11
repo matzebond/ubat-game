@@ -4,13 +4,13 @@ import { observer } from "mobx-react";
 import { Button, Alert } from "react-bootstrap";
 
 @observer
-export default class AddEntry extends React.Component {
+export default class Entry extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            text: "Bill Gates",
-            tags: [ {id: 1, text: "Programmer" }],
+            text: this.props.text,
+            tags: this.props.tags.map((text, id) => ({id, text})),
             send: false,
             submitErr: false
         };
@@ -69,7 +69,6 @@ export default class AddEntry extends React.Component {
 
     submitCallback(err) {
         if(err) {
-            console.log(err);
             this.setState({text: "", tags: [], send: true, submitErr: true});
         }
         else {
