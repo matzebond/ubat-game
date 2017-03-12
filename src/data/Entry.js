@@ -5,7 +5,7 @@ export default class Entry {
     @observable text;
     @observable tags;
 
-    constructor({id, text, tags=[]}) {
+    constructor({id=null, text="", tags=[]}) {
         this.id = id;
         this.text = text;
         this.tags = tags;

@@ -5,6 +5,15 @@ import { Button, Alert } from "react-bootstrap";
 
 @observer
 export default class Entry extends React.Component {
+
+    static defaultProps = {
+        text: "",
+        tags: [],
+        id: null,
+        onSubmit: function () {},
+        onAbort: function () {}
+    }
+
     constructor(props) {
         super(props);
 
@@ -24,10 +33,22 @@ export default class Entry extends React.Component {
         this.submitCallback = this.submitCallback.bind(this);
     }
 
+    componentWillReceiveProps(nextProps) {
+        console.log("willRecProps", nextProps);
+
+        if (this.props === nextProps)
+            return;
+
+        this.setState({
+            text: nextProps.text,
+            tags: nextProps.tags.map((text, id) => ({id, text}))
+        });
+    }
+
     handleTagDelete(i) {
         let tags = this.state.tags;
         tags.splice(i, 1);
-        this.setState({tags: tags});
+        this.setState({tags});
     }
 
     handleTagAddition(tag) {
@@ -36,7 +57,7 @@ export default class Entry extends React.Component {
             id: tags.length + 1,
             text: tag
         });
-        this.setState({tags: tags});
+        this.setState({tags});
     }
 
     handleTagDrag(tag, currPos, newPos) {
@@ -47,7 +68,7 @@ export default class Entry extends React.Component {
         tags.splice(newPos, 0, tag);
 
         // re-render
-        this.setState({ tags: tags });
+        this.setState({tags});
     }
 
     handleTextChange(e) {
@@ -55,23 +76,25 @@ export default class Entry extends React.Component {
     }
 
     handleSubmit() {
-        let {tags, text} = this.state;
-        tags = tags.map(tag => tag.text);
+        const text = this.state.text;
+        const tags = this.state.tags.map(tag => tag.text);
+        const id = this.props.id;
 
-        this.props.onSubmit({text, tags}, this.submitCallback);
+        this.props.onSubmit({id, text, tags}, this.submitCallback);
 
         this.setState({send: false, lastText: text});
     }
 
     handleAbort() {
-        this.setState({text: "", tags: [], send: false});
+        this.props.onAbort(this);
     }
 
     submitCallback(err) {
         if(err) {
-            this.setState({text: "", tags: [], send: true, submitErr: true});
+            this.setState({send: true, submitErr: true});
         }
         else {
+            console.log("callback");
             this.setState({text: "", tags: [], send: true, submitErr: false});
         }
     }
@@ -79,11 +102,10 @@ export default class Entry extends React.Component {
     render() {
         const {tags, text, send, submitErr, lastText} = this.state;
         const tagNames = this.props.store.tagNames;
-        // const (text == null && tags == null)
 
         return (
             <div>
-                <p>Insert word: </p>
+                <p>Entry text: </p>
                 <input className="form-control input-lg" value={text} onChange={this.handleTextChange} placeholder={'Enter phrase'}/>
                 <span>Tags: </span>
                 <ReactTags tags={tags}

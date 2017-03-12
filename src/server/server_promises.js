@@ -25,10 +25,11 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 app.use(allowCrossDomain);
 
 
+
 const getTagList = () => {
-    return db.all(`SELECT t.id, t.text, COUNT(*) AS count
+    return db.all(`SELECT t.id, t.text, COUNT(etm.tag_id) AS count
                     FROM tags AS t
-                    JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
+                    LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
                     GROUP BY t.id
                     ORDER BY t.id`)
         .then( rows => {
@@ -49,10 +50,9 @@ app.get("/tag/list", (req, res) => {
         });
 });
 
-
 app.get("/tag/text/:text", (req, res) => {
     const tagText = req.params.text;
-    db.all(`SELECT tag_id AS id, tag_text AS text, COUNT(*) AS count
+    db.all(`SELECT tag_id AS id, tag_text AS text, COUNT(entry_id) AS count
             FROM entry_tag_view
             WHERE tag_text LIKE ?
             GROUP BY tag_id`, tagText+'%')
@@ -68,7 +68,7 @@ app.get("/tag/text/:text", (req, res) => {
 
 app.get("/tag/:id", (req, res) => {
     const tagID = req.params.id;
-    db.get(`SELECT tag_id AS id, tag_text AS text, COUNT(*) AS count
+    db.get(`SELECT tag_id AS id, tag_text AS text, COUNT(entry_id) AS count
             FROM entry_tag_view
             WHERE tag_id = ?
             GROUP BY tag_id`, tagID)
@@ -88,22 +88,33 @@ app.get("/tag/:id", (req, res) => {
 
 
 
-app.post("/entry/add", (req, res) => {
-    console.log(req.body);
 
+const parseEntryBody = function (body) {
     let entry;
 
     try {
-        entry = new Entry(req.body);
+        entry = new Entry(body);
     } catch (e) {
-        console.log("wrong format");
-        res.status(400).send("wrong format").end();
-        return;
+        console.log(e);
+        throw "wrong format";
     }
 
     if(entry.tags.length === 0) {
-        console.log("no tags");
-        res.status(400).send("no tags").end();
+        throw ("no tags");
+    }
+
+    return entry;
+};
+
+app.post("/entry/add", (req, res) => {
+    console.log("add", JSON.stringify(req.body));
+    let entry = null;
+    try {
+        entry = parseEntryBody(req.body);
+    }
+    catch (e) {
+        console.log(e);
+        res.status(400).send(e).end();
         return;
     }
 
@@ -152,6 +163,74 @@ app.post("/entry/add", (req, res) => {
                 res.status(500).end();
             }
         });
+});
+
+app.post("/entry/update", async (req, res) => {
+    console.log("update", JSON.stringify(req.body));
+
+    let entry = null;
+    try {
+        entry = parseEntryBody(req.body);
+    }
+    catch (e) {
+        console.log(e);
+        res.status(400).send(e).end();
+        return;
+    }
+
+    try {
+        // update entry text
+        let result = await db.run(`UPDATE entries SET text = ? WHERE id = ?`, entry.text, entry.id);
+
+        // delete tag relations
+        await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entry.id);
+
+        // create tags and/or add relations
+        entry.tags.map(async (tag) => {
+            // get tag.id if tag already exists
+            let tagID = await db.get(`SELECT id FROM tags WHERE text LIKE ?`, tag);
+
+            // otherwise insert new tag
+            if (!tagID) {
+                const stmt = await db.run(`INSERT INTO tags VALUES (NULL, ?)`, tag);
+                tagID = stmt.lastID;
+            }
+            else{
+                tagID = tagID.id;
+            }
+            // add relation form new entry to (new or existing) tag
+            db.run(`INSERT INTO entry_tag_map VALUES (?,?)`, entry.id, tagID);
+        });
+
+        //return the created entry and all tags
+        const tags = await getTagList();
+        res.json({entry, tags}).end();
+    }
+    catch (e) {
+        console.log(err);
+        res.status(500).end();
+    }
+});
+
+app.delete("/entry/delete/:id", async (req, res) => {
+    const entryID = req.params.id;
+    console.log("delete " + entryID);
+    try {
+        let result = await db.run(`DELETE FROM entries WHERE id = ?;`, entryID);
+
+        if (!result.changes) {
+            console.log(`couldn't delete entry with id ${entryID}`);
+            res.status(204).send(`couldn't delete entry with id ${entryID}`).end();
+            return;
+        }
+
+        await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entryID);
+        res.status(200).end();
+    }
+    catch (e) {
+        console.log(err);
+        res.status(500).end();
+    }
 });
 
 app.get("/entry/list", (req, res) => {

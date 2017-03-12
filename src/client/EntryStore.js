@@ -31,6 +31,8 @@ class EntryStore {
     constructor() {
         this.sendEntry = this.sendEntry.bind(this);
         this.requestTags = this.requestTags.bind(this);
+        this.deleteEntry = this.deleteEntry.bind(this);
+        this.updateEntry = this.updateEntry.bind(this);
 
         this.requestTags();
     }
@@ -56,22 +58,65 @@ class EntryStore {
     }
 
     sendEntry(entry, callback = () => {}) {
+        console.log(entry);
         axios.post("/entry/add", entry)
-            .then(res => {
+            .then( res => {
                 if (res.status !== 200) {
-                    console.log(res);
-                    callback(res.data);
-                    // reject(body);
-                    return;
+                    throw res.data;
                 }
 
+                // replace tags with received tags
                 const tags = res.data.tags.map(e => new Tag(e));
                 this.tags.replace(tags);
                 callback();
             })
             .catch(err => {
+                let errMsg = err.response ? err.response : err;
+                console.log(errMsg);
+                callback(errMsg);
+            });
+    }
+
+    updateEntry(entry, callback = () => {}) {
+        axios.post("/entry/update", entry)
+            .then( res => {
+                if (res.status !== 200) {
+                    throw res.data;
+                }
+
+                // also update entry in local storage
+                const entries = this.entries.map(e => {
+                    return (e.id === entry.id) ? entry : e;
+                });
+                this.entries.replace(entries);
+
+                // replace tags with received tags
+                const tags = res.data.tags.map(e => new Tag(e));
+                this.tags.replace(tags);
+                callback();
+            })
+            .catch(err => {
+                let errMsg = err.response ? err.response : err;
+                console.log(errMsg);
+                callback(errMsg);
+            });
+    }
+
+    deleteEntry(entryID, entryIndex) {
+        axios.delete("/entry/delete/" + entryID)
+            .then( res => {
+                if (res.status !== 200) {
+                    console.log(res);
+                    return;
+                }
+
+                //also remove entry from local storage
+                if (entryIndex !== null) {
+                    this.entries.splice(entryIndex, 1);
+                }
+            })
+            .catch(err => {
                 console.log(err.response);
-                callback(err.response);
             });
     }
 }
