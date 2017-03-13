@@ -23,7 +23,11 @@ var config = {
         publicPath: '/'
     },
     module: {
-        loaders: [
+        rules: [
+            {
+                test: /\.css$/,
+                use: [ 'style-loader', 'css-loader' ]
+            },
             {
                 test: /\.jsx?$/,
                 exclude: /(node_modules)/,
