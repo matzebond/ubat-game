@@ -1,9 +1,8 @@
-body {
-    margin: 1em 3%;
+.entry-container {
+  margin-bottom: 1em
 }
 
 .react-tagsinput {
-  background-color: #fff;
   /* border: 1px solid #ccc; */
   overflow: visible;
   height: 75px;
@@ -18,9 +17,9 @@ body {
 }
 
 .react-tagsinput-tag {
-  background-color: lightcyan;
+  background-color: lightgrey;
   border-radius: 2px;
-  border: 1px solid lightgrey;
+  border: 1px solid darkgrey;
   color: #4a4a4a;
   display: inline-block;
   font-family: sans-serif;
@@ -34,6 +33,7 @@ body {
 .react-tagsinput-remove {
   cursor: pointer;
   font-weight: bold;
+  color: #d9534f;
 }
 
 .react-tagsinput-tag a::before {

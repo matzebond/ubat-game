@@ -11,18 +11,12 @@ const tagRenderLayout = function (tagComponents, inputComponent) {
     return (
         <div>
             <div>
-            {logger(tagComponents).length !== 0 ? tagComponents : <p>an entry needs at least one tag</p>}
+            {tagComponents.length !== 0 ? tagComponents : <p>an entry needs at least one tag</p>}
             </div>
             {inputComponent}
         </div>
     );
 };
-
-
-const logger = a => {
-    console.log(a, a !== []);
-    return a;
-}
 
 @observer
 export default class Entry extends React.Component {
@@ -92,9 +86,6 @@ export default class Entry extends React.Component {
         const tags = this.state.tags;
         const id = this.props.id;
 
-
-        console.log(this.state.tags);
-
         this.props.onSubmit({id, text, tags}, this.submitCallback);
 
         this.setState({send: false, lastText: text});
@@ -134,9 +125,7 @@ export default class Entry extends React.Component {
         const { suggestions, tagValue } = this.state;
 
         const onChange = (e, {newValue, method}) => {
-            console.log(method);
             // if (method === 'enter') {
-
             // } else {
                 this.setState({tagValue : newValue});
                 // props.onChange(e);
@@ -145,7 +134,6 @@ export default class Entry extends React.Component {
 
         const onKeyDown = (event) => {
             if (event.key === 'Enter') {
-                console.log('Enter pressed!');
                 addTag(tagValue);
                 this.setState({tagValue: ""});
             }
@@ -181,7 +169,7 @@ export default class Entry extends React.Component {
         const {tags, text, send, submitErr, lastText} = this.state;
 
         return (
-            <div>
+            <div className="entry-container">
                 <p>Entry text: </p>
 
                 <input className="form-control input-lg" value={text} onChange={this.onEntryTextChange} placeholder={'Enter phrase'}/>
@@ -190,8 +178,8 @@ export default class Entry extends React.Component {
                 <TagsInput renderInput={this.autocompleteRenderInput} value={this.state.tags} onChange={this.handleTagChange} renderLayout={tagRenderLayout} onlyUnique/>
 
                 <div>
-                    <Button bsStyle="success" onClick={this.handleSubmit}>Save</Button>
-                    <Button bsStyle="danger" onClick={this.handleAbort}>Back</Button>
+                    <Button bsStyle="success" block onClick={this.handleSubmit}>Save</Button>
+                    <Button bsStyle="danger" block onClick={this.handleAbort}>Back</Button>
                 </div>
 
                 {send ?

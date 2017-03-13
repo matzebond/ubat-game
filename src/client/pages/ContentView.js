@@ -1,6 +1,7 @@
 import React from "react";
 import { Route, Link, Switch } from "react-router-dom";
 import { observer } from "mobx-react";
+import { Button, ButtonGroup, Well } from "react-bootstrap";
 
 import EntryStore from "../EntryStore.js";
 
@@ -15,7 +16,8 @@ export default class ContentView extends React.Component {
 
     render() {
         return (
-            <div>
+            <Well>
+                <h2>Content Menu</h2>
                 <Switch>
                     <Route path="/content/edit" component={EditEntries} />
                     <Route path="/content/add" render={() =>
@@ -33,15 +35,13 @@ export default class ContentView extends React.Component {
                         </div>
                     }/>
                     <Route render={ () =>
-                        <div>
-                            <ul>
-                                <li><Link to="/content/add">Add Entry</Link></li>
-                                <li><Link to="/content/edit">Edit Entries</Link></li>
-                            </ul>
-                        </div>
+                        <ButtonGroup vertical block>
+                            <Link to="/content/add"><Button bsSize="large" block>Add Entry</Button></Link>
+                            <Link to="/content/edit"><Button bsSize="large" block>Edit Entries</Button></Link>
+                        </ButtonGroup>
                     }/>
                 </Switch>
-            </div>
+            </Well>
         );
     }
 }

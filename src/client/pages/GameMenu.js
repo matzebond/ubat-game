@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { Route, Link , Switch } from "react-router-dom";
-import { Badge } from "react-bootstrap";
+import { Badge, Button, ButtonGroup, Well } from "react-bootstrap";
 
 import EntryStore from "../EntryStore";
 
@@ -27,13 +27,13 @@ export default class GameMenu extends React.Component {
             <Switch>
                 <Route path="/game/:id" component={({match}) => <Game match={match}/>} />
                 <Route render={() =>
-                               <div>
-                               <h3>Choose a tag</h3>
-                               <ul>
-                               <li><Link to="/game/random" > random tag</Link></li>
+                               <Well>
+                               <h2>Choose a tag</h2>
+                               <ButtonGroup vertical block>
+                               <Link to="/game/random"><Button block bsSize="large"> random</Button></Link>
                                {tagLis}
-                               </ul>
-                               </div>
+                               </ButtonGroup>
+                               </Well>
                               } />
             </Switch>
             </div>
@@ -43,10 +43,12 @@ export default class GameMenu extends React.Component {
 
 let mapTags = (tag) => {
     return (
-        <li key={tag.id - 1}>
+        <Link key={tag.id} to={"/game/"+ (tag.id)}>
+            <Button bsSize="large" block>
+            {tag.text}
             <Badge>{tag.count}</Badge>
-            <Link to={"/game/"+ (tag.id-1)} > {tag.text} </Link>
-        </li>
+            </Button>
+        </Link>
     );
 };
 

@@ -1,0 +1,7 @@
+body {
+    margin: 1em 3%;
+}
+.h1, .h2, .h3, h1, h2, h3 {
+    margin-top: 0;
+    text-align: center;
+}

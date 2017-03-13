@@ -35,12 +35,15 @@ class EntryStore {
         this.updateEntry = this.updateEntry.bind(this);
 
         this.requestTags();
+        this.requestEntries();
     }
 
     requestTags() {
         axios.get("/tag/list")
             .then(res => {
                 this.tags.replace(res.data.map(e => new Tag(e)));
+                this.lastTagRequest = new Date();
+                console.log("got tags");
             })
             .catch(err => {
                 console.log(err);
@@ -51,6 +54,8 @@ class EntryStore {
         axios.get("/entry/list")
             .then(res => {
                 this.entries.replace(res.data.map(e => new Entry(e)));
+                this.lastEntryRequest = new Date();
+                console.log("got entries");
             })
             .catch(err => {
                 console.log(err);
@@ -68,6 +73,7 @@ class EntryStore {
                 // replace tags with received tags
                 const tags = res.data.tags.map(e => new Tag(e));
                 this.tags.replace(tags);
+                this.lastTagRequest = new Date();
                 callback();
             })
             .catch(err => {
@@ -84,7 +90,8 @@ class EntryStore {
                     throw res.data;
                 }
 
-                // also update entry in local storage
+                // update entry in local storage
+                console.log(this);
                 const entries = this.entries.map(e => {
                     return (e.id === entry.id) ? entry : e;
                 });
@@ -93,6 +100,7 @@ class EntryStore {
                 // replace tags with received tags
                 const tags = res.data.tags.map(e => new Tag(e));
                 this.tags.replace(tags);
+                this.lastTagRequest = new Date();
                 callback();
             })
             .catch(err => {
@@ -110,7 +118,7 @@ class EntryStore {
                     return;
                 }
 
-                //also remove entry from local storage
+                // remove entry from local storage
                 if (entryIndex !== null) {
                     this.entries.splice(entryIndex, 1);
                 }
