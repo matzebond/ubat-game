@@ -20,6 +20,6 @@ echo "
 -- Down
 -----------------------
 
-DELETE FROM entry_tag_map WHERE;
-DELETE FROM entries WHERE;
-DELETE FROM tags WHERE;" >> $1
+DELETE FROM entry_tag_map;
+DELETE FROM entries;
+DELETE FROM tags;" >> $1

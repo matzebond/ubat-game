@@ -62,6 +62,6 @@ INSERT INTO entry_tag_map VALUES(20,4);
 -- Down
 -----------------------
 
-DELETE FROM entry_tag_map WHERE;
-DELETE FROM entries WHERE;
-DELETE FROM tags WHERE;
+DELETE FROM entry_tag_map;
+DELETE FROM entries;
+DELETE FROM tags;
