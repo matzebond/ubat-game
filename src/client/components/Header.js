@@ -6,9 +6,8 @@ export default class Header extends React.Component {
     render () {
         return (
             <header>
-                image,
-                <Link to="/">Home</Link>,
-                language, option1, option2
+                {"Header: "}
+                <Link to="/">Home</Link>
             </header>
         );
     }

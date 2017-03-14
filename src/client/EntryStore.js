@@ -14,18 +14,19 @@ class EntryStore {
     @observable entries = [new Entry ({id:1, text:"DUMMY_ENTRY", tags:["DUMMY_TAG"]})];
     @observable tags = [new Tag({id: 1, text:"DUMMY_TAG", count: 1}) ];
 
-    @computed get entryNames() {
-        return this.entries.map(entry => entry.text);
-    };
-
-    @computed get tagNames() {
-        return this.tags.map(tag => tag.text);
-    };
+    @observable currentGameTag = this.tags[0];
 
     @computed get popularTags() {
         return this.tags.sort((a, b) => {
             return b.count - a.count;
         });
+    }
+
+    @computed get currentGameEntries() {
+        return this.entries.filter( entry => {
+            return entry.tags.includes(this.currentGameTag.text);
+        });
+
     }
 
     constructor() {
@@ -36,6 +37,10 @@ class EntryStore {
 
         this.requestTags();
         this.requestEntries();
+    }
+
+    setCurrentGameTag(tag) {
+        this.currentGameTag = tag;
     }
 
     requestTags() {

@@ -1,0 +1,22 @@
+.well {
+    position: relative;
+    margin: 0;
+}
+
+.game-well {
+}
+
+.game-btn-skip, .game-btn-solve {
+    height: 200px;
+    /* position: absolute; */
+}
+
+.game-btn-skip {
+    width: 30%;
+    right: 1em;
+}
+
+.game-btn-solve {
+    width: 70%;
+    left: 1em;
+}
