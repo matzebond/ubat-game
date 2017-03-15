@@ -6,7 +6,7 @@ import Tag from "../data/Tag";
 import Entry from "../data/Entry";
 
 
-const backendIp = process.env.HEADS_UP_BACKEND_IP || "192.168.0.19";
+const backendIp = process.env.HEADS_UP_BACKEND_IP || "localhost";
 const backendPort = parseInt(process.env.HEADS_UP_BACKEND_PORT, 10) || 13750;
 const backendAddr = `http://${backendIp}:${backendPort}`;
 

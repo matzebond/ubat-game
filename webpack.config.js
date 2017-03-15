@@ -16,6 +16,12 @@ let htmlPlug = new HtmlWebpackPlugin({
     inject: 'body'
 });
 
+const envPlug = new webpack.EnvironmentPlugin({
+    NODE_ENV : "development",
+    HEADS_UP_BACKEND_IP: "localhost",
+    HEADS_UP_BACKEND_PORT: "13750"
+});
+
 var config = {
     name: 'client',
     entry: APP_DIR + '/index.js',
@@ -42,9 +48,12 @@ var config = {
         ]
     },
     plugins: debug ? [
-        htmlPlug
+        htmlPlug,
+        envPlug
+
     ] : [
         htmlPlug,
+        envPlug,
         new webpack.optimize.DedupePlugin(),
         new webpack.optimize.OccurenceOrderPlugin(),
         new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
