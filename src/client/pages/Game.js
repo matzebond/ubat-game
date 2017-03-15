@@ -126,6 +126,9 @@ export default class Game extends React.Component {
     }
 
     nextEntry() {
+        if (!this.state.gameStated) return;
+
+
         if (this.tags.length <= 0) {
             this.endGame();
         }

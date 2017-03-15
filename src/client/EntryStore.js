@@ -17,7 +17,7 @@ class EntryStore {
     @observable currentGameTag = this.tags[0];
 
     @computed get popularTags() {
-        return this.tags.sort((a, b) => {
+        return this.tags.filter(t => t.count > 0).sort((a, b) => {
             return b.count - a.count;
         });
     }
