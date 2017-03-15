@@ -22,7 +22,7 @@ var config = {
     output: {
         path: DIST_DIR,
         filename: 'bundle.js',
-        publicPath: '/'
+        publicPath: buildPages ? '/heads-up-web/' : '/'
     },
     module: {
         rules: [
