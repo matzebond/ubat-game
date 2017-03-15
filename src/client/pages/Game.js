@@ -103,7 +103,7 @@ export default class Game extends React.Component {
             });
         }, updateTime);
 
-        this.nextEntry();
+        this.nextEntry(true);
     }
 
     endGame() {
@@ -125,8 +125,8 @@ export default class Game extends React.Component {
         this.nextEntry();
     }
 
-    nextEntry() {
-        if (!this.state.gameStated) return;
+    nextEntry(force) {
+        if (!this.state.gameStated && !force) return;
 
 
         if (this.tags.length <= 0) {
