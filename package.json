@@ -10,7 +10,9 @@
     "build": "webpack && webpack --config ./webpack.config.backend.js",
     "watch:backend": "webpack --watch --config ./webpack.config.backend.js",
     "nodemon:backend": "nodemon \"./build/server.js\" --watch \"./build\" --watch \"./migrations\" --delay 500ms",
-    "backend": "npm-run-all --parallel watch:backend nodemon:backend"
+    "backend": "npm-run-all --parallel watch:backend nodemon:backend",
+    "pages": "BUILD_PAGES=1 webpack"
+
   },
   "dependencies": {
     "axios": "^0.15.3",

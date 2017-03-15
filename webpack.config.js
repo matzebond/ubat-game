@@ -6,8 +6,10 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
+var buildPages = process.env.BUILD_PAGES;
+
 var APP_DIR = path.resolve(__dirname, 'src/client');
-var DIST_DIR = path.resolve(__dirname, 'dist');
+var DIST_DIR = buildPages ? path.resolve(__dirname, 'docs') : path.resolve(__dirname, 'dist');
 
 let htmlPlug = new HtmlWebpackPlugin({
     template: APP_DIR + '/index.template.ejs',

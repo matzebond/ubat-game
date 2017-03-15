@@ -9,7 +9,7 @@ import Entry from "../data/Entry";
 
 const dbFile = './build/db.sqlite';
 
-const port = 13750;
+const port = parseInt(process.env.HEADS_UP_BACKEND_PORT, 10) || 13750;
 const app = express();
 
 const allowCrossDomain = function(req, res, next) {

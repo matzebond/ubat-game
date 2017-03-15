@@ -5,7 +5,10 @@ import axios from "axios";
 import Tag from "../data/Tag";
 import Entry from "../data/Entry";
 
-const backendAddr = "http://192.168.0.19:13750";
+
+const backendIp = process.env.HEADS_UP_BACKEND_IP || "192.168.0.19";
+const backendPort = parseInt(process.env.HEADS_UP_BACKEND_PORT, 10) || 13750;
+const backendAddr = `http://${backendIp}:${backendPort}`;
 
 axios.defaults.baseURL = backendAddr;
 axios.defaults.headers.post['Content-Type'] = 'application/json';
