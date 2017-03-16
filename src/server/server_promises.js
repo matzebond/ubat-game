@@ -94,8 +94,8 @@ const parseEntryBody = function (body) {
 
     try {
         entry = new Entry(body);
-    } catch (e) {
-        console.log(e);
+    } catch (err) {
+        console.log(err);
         throw "wrong format";
     }
 
@@ -112,9 +112,9 @@ app.post("/entry/add", (req, res) => {
     try {
         entry = parseEntryBody(req.body);
     }
-    catch (e) {
-        console.log(e);
-        res.status(400).send(e).end();
+    catch (err) {
+        console.log(err);
+        res.status(400).send(err).end();
         return;
     }
 
@@ -158,10 +158,10 @@ app.post("/entry/add", (req, res) => {
             res.json({entry, tags}).end();
         })
         .catch(err => {
-            if (err) {
-                console.log(err);
-                res.status(500).end();
-            }
+            console.log(err);
+            if(!res.statusCode) res.status(500);
+            if (typeof err === 'string') res.send(err);
+            res.end();
         });
 });
 
@@ -172,15 +172,23 @@ app.post("/entry/update", async (req, res) => {
     try {
         entry = parseEntryBody(req.body);
     }
-    catch (e) {
-        console.log(e);
-        res.status(400).send(e).end();
+    catch (err) {
+        console.log(err);
+        res.status(400).send(err).end();
         return;
     }
 
     try {
         // update entry text
-        let result = await db.run(`UPDATE entries SET text = ? WHERE id = ?`, entry.text, entry.id);
+        // TODO do better ??
+        let result = await db.run(`UPDATE entries SET text = ? WHERE id = ?`, entry.text, entry)
+            .catch( err => {
+                return -1;
+            });
+
+        if (result == -1) throw `entry text "${entry.text}" is already used`;
+
+
 
         // delete tag relations
         await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entry.id);
@@ -206,9 +214,11 @@ app.post("/entry/update", async (req, res) => {
         const tags = await getTagList();
         res.json({entry, tags}).end();
     }
-    catch (e) {
+    catch (err) {
         console.log(err);
-        res.status(500).end();
+        res.status(500);
+        if (typeof err === 'string') res.send(err);
+        res.end();
     }
 });
 
@@ -227,7 +237,7 @@ app.delete("/entry/delete/:id", async (req, res) => {
         await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entryID);
         res.status(200).end();
     }
-    catch (e) {
+    catch (err) {
         console.log(err);
         res.status(500).end();
     }
