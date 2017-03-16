@@ -55,7 +55,7 @@ export default class EditEntries extends React.Component {
                     onAbort={() => { this.setState({active: null}); }}
                     id={entry.id}
                     text={entry.text}
-                    tags={entry.tags}
+                    tags={entry.tags.slice()}
                     store={EntryStore}
                     clearData={false} />
                  </Col>

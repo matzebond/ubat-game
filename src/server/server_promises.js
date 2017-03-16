@@ -96,11 +96,15 @@ const parseEntryBody = function (body) {
         entry = new Entry(body);
     } catch (err) {
         console.log(err);
-        throw "wrong format";
+        throw "Wrong format.";
+    }
+
+    if(!entry.text) {
+        throw "The entry needs a text.";
     }
 
     if(entry.tags.length === 0) {
-        throw ("no tags");
+        throw "The entry need at least one tag.";
     }
 
     return entry;

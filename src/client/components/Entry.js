@@ -98,7 +98,8 @@ export default class Entry extends React.Component {
 
     submitCallback(err) {
         if(err) {
-            this.setState({send: true, submitErr: true});
+            console.log(err);
+            this.setState({send: true, submitErr: true, errorMsg: typeof err.data === 'string' ? err.data : ""});
         }
         else {
             if (this.props.clearData) {
@@ -171,7 +172,7 @@ export default class Entry extends React.Component {
 
 
     render() {
-        const {tags, text, send, submitErr, lastText} = this.state;
+        const {tags, text, send, submitErr, errorMsg, lastText} = this.state;
 
         return (
             <div className="entry-container">
@@ -191,6 +192,8 @@ export default class Entry extends React.Component {
                     submitErr ?
                     <Alert bsStyle="danger">
                         <strong>Error!</strong> The entry "{lastText}" couln't be saved.
+                        <br></br>
+                        {errorMsg}
                     </Alert>
                     :
                     <Alert bsStyle="success">
