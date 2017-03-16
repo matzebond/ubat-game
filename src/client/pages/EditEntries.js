@@ -56,7 +56,8 @@ export default class EditEntries extends React.Component {
                     id={entry.id}
                     text={entry.text}
                     tags={entry.tags}
-                    store={EntryStore} />
+                    store={EntryStore}
+                    clearData={false} />
                  </Col>
                  : null
                 }

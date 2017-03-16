@@ -26,7 +26,8 @@ export default class Entry extends React.Component {
         tags: [],
         id: null,
         onSubmit: function () {},
-        onAbort: function () {}
+        onAbort: function () {},
+        clearUpdate: true
     }
 
     constructor(props) {
@@ -100,8 +101,12 @@ export default class Entry extends React.Component {
             this.setState({send: true, submitErr: true});
         }
         else {
-            console.log("callback");
-            this.setState({text: "", tags: [], send: true, submitErr: false});
+            if (this.props.clearData) {
+                this.setState({text: "", tags: [], send: true, submitErr: false});
+            }
+            else {
+                this.setState({send: true, submitErr: false});
+            }
         }
     }
 
