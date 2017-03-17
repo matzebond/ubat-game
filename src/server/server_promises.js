@@ -185,7 +185,7 @@ app.post("/entry/update", async (req, res) => {
     try {
         // update entry text
         // TODO do better ??
-        let result = await db.run(`UPDATE entries SET text = ? WHERE id = ?`, entry.text, entry)
+        let result = await db.run(`UPDATE entries SET text = ? WHERE id = ?`, entry.text, entry.id)
             .catch( err => {
                 return -1;
             });
