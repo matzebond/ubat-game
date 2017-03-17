@@ -6,6 +6,11 @@ import EntryStore from "../EntryStore";
 
 import "./game.css";
 
+const successAudio = new Audio("/assets/success.mp3");
+const failureAudio = new Audio("/assets/failure.mp3");
+
+
+
 /**
  * Fisher-Yates Shuffle
  * @param {Array} a items The array containing the items.
@@ -31,16 +36,29 @@ function shuffle(array) {
     return array;
 }
 
+function triggerAudio(audio) {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play();
+}
+
+const updateTime = 200;
+const minGestureTime = 1000;
+const thresholdAccX = 2;
+const thresholdAccY = 1.6;
+const thresholdRotA = 150;
+const thresholdRotB = 80;
+
 @observer
 export default class Game extends React.Component {
-
     static defaultProps = {
-        gameLength: 60000
+        gameLength: 120000
     }
 
     constructor(props) {
         super(props);
 
+        this.renderGame = this.renderGame.bind(this);
         this.handleMotionChange = this.handleMotionChange.bind(this);
         this.startGame = this.startGame.bind(this);
         this.endGame = this.endGame.bind(this);
@@ -50,8 +68,8 @@ export default class Game extends React.Component {
 
         this.state = {
             progress: 40,
-            lastTime: new Date(),
-            gameStated: false
+            lastTime: Date.now(),
+            gameState: 'new'
         };
 
         let tagID = this.props.match.params.id;
@@ -66,32 +84,49 @@ export default class Game extends React.Component {
     }
 
     componentWillMount() {
-        if (window && window.DeviceMotionEvent) {
-            this.motionListener2 = this.handleMotionChange;
-            window.addEventListener('devicemotion', this.motionListener2, false);
-        }
+        // this.addListeners();
     }
 
     componentWillUnmount() {
-        if (window) {
-            window.removeEventListener('devicemotion', this.motionListener2, false);
-        }
+        // this.removeListeners();
         clearInterval(this.intervalID);
     }
 
+    addListeners() {
+        if (window && window.DeviceMotionEvent) {
+            this.motionListener = this.handleMotionChange;
+            window.addEventListener('devicemotion', this.motionListener, false);
+        }
+    }
+
+    removeListeners() {
+        if (window) {
+            window.removeEventListener('devicemotion', this.motionListener, false);
+        }
+    }
+
     startGame() {
-        console.log("Start Game");
+        if (this.state.gameState == 'playing') {
+            return;
+        }
+
         this.tags = shuffle(EntryStore.currentGameEntries);
-        const updateTime = 200;
 
         this.setState({
-            gameStated: true,
+            gameState: 'playing',
             progress: 0,
             solved: 0,
             skipped: 0,
-            currentEntry: ""
+            currentEntry: "",
+            gameStart: Date.now()
         });
 
+        this.nextEntry(true);
+        this.addListeners();
+        this.startTimer();
+    }
+
+    startTimer() {
         this.intervalID = setInterval(() => {
             if (this.state.progress >= 100) {
                 this.endGame();
@@ -102,31 +137,38 @@ export default class Game extends React.Component {
                 };
             });
         }, updateTime);
+    }
 
-        this.nextEntry(true);
+    stopTimer() {
+        clearInterval(this.intervalID);
     }
 
     endGame() {
-        clearInterval(this.intervalID);
-        this.setState({
-            gameStated: false,
-            progress: 0
-        });
+        const gameEnd = Date.now();
+
+        this.stopTimer();
+        this.removeListeners();
+        this.setState((prevState) => { return {
+            gameState: 'finished',
+            progress: 0,
+            gameTime: gameEnd - prevState.gameStart
+        }});
     }
 
     solveEntry() {
+        triggerAudio(successAudio);
         this.setState(prev => {return {solved: ++prev.solved};});
         this.nextEntry();
-
     }
 
     skipEntry() {
+        triggerAudio(failureAudio);
         this.setState(prev => {return {skipped: ++prev.skipped};});
         this.nextEntry();
     }
 
     nextEntry(force) {
-        if (!this.state.gameStated && !force) return;
+        if (this.state.gameState != 'playing' && !force) return;
 
 
         if (this.tags.length <= 0) {
@@ -139,16 +181,16 @@ export default class Game extends React.Component {
     }
 
     handleMotionChange(event) {
-        this.xA = event.acceleration.x | 0;
-        this.yA = event.acceleration.y | 0;
-        this.zA = event.acceleration.z | 0;
-        this.xG = event.accelerationIncludingGravity.x | 0;
-        this.yG = event.accelerationIncludingGravity.y | 0;
-        this.zG = event.accelerationIncludingGravity.z | 0;
-        this.aR = event.rotationRate.alpha | 0;
-        this.bR = event.rotationRate.beta | 0;
-        this.gR = event.rotationRate.gamma | 0;
-        this.interval = event.interval | 0;
+        this.xA = event.acceleration.x || 0;
+        this.yA = event.acceleration.y || 0;
+        this.zA = event.acceleration.z || 0;
+        this.xG = event.accelerationIncludingGravity.x || 0;
+        this.yG = event.accelerationIncludingGravity.y || 0;
+        this.zG = event.accelerationIncludingGravity.z || 0;
+        this.aR = event.rotationRate.alpha || 0;
+        this.bR = event.rotationRate.beta || 0;
+        this.gR = event.rotationRate.gamma || 0;
+        this.interval = event.interval || 0;
 
         const timestamp = event.timestamp;
 
@@ -156,18 +198,66 @@ export default class Game extends React.Component {
             this.supported = true;
         }
 
-        let currentTime = new Date();
-        const timeDiff = currentTime.getTime() - this.state.lastTime.getTime();
+        let currentTime = Date.now();
+        const timeDiff = currentTime - this.state.lastTime;
 
-        if (timeDiff > 1000) {
+        if (Math.abs(this.xA) - Math.abs(this.yA) >= thresholdAccX && timeDiff >= minGestureTime) {
+            this.solveEntry();
             this.setState({
                 lastTime : currentTime
             });
         }
+        else if ((Math.abs(this.yA) - Math.abs(this.xA) >= thresholdAccY || Math.abs(this.aR) >= thresholdRotA)&& timeDiff >= minGestureTime) {
+            this.skipEntry();
+            this.setState({
+                lastTime : currentTime
+            });
+        }
+
+        // if (timeDiff >= minGestureTime) {
+        //     this.setState({
+        //         lastTime : currentTime
+        //     });
+        // }
+    }
+
+    renderGame() {
+        const {gameState, currentEntry, progress, gameTime, skipped, solved} = this.state;
+        const tag = EntryStore.currentGameTag;
+        const entryCount = solved + skipped;
+        const solvedPct = (solved / entryCount * 100).toFixed(0);
+        const gameSeconds = (gameTime / 1000).toFixed(1);
+
+        switch(gameState) {
+        case "playing":
+            return (<div>
+                        <h1>{currentEntry.text}</h1>
+                        <Button bsStyle="success" bsSize="large" className="game-btn-solve" onClick={this.solveEntry}>solved</Button>
+                        <Button bsStyle="warning" bsSize="large" className="game-btn-skip" onClick={this.skipEntry}>skip</Button>
+                        <p style={{textAlign: "center"}}>{`Solved: ${solved}, Skipped: ${skipped}`}</p>
+                        <ProgressBar active now={progress} />
+                    </div>);
+
+        case "finished":
+            return (<div>
+                        <h2>{`In ${gameSeconds}s you solved ${solved}`}</h2>
+                        <h1 className="huge">{`${solvedPct}%`}</h1>
+                        <h3>{`Replay the tag "${tag.text}"?`}</h3>
+                        <Button bsStyle="primary" bsSize="large" block onClick={() => this.startGame()}>Play Again</Button>
+                    </div>);
+
+        case "new":
+        default:
+            return (<div>
+                        <h1>{`Start playing the tag "${tag.text}"`}</h1>
+                        <Button bsStyle="primary" bsSize="large" block onClick={() => this.startGame()}> Start Game </Button>
+                    </div>);
+
+        }
     }
 
     render() {
-        const { progress, gameStated, currentEntry, solved, skipped} = this.state;
+        const { progress, gameState, currentEntry, solved, skipped} = this.state;
         const tag = EntryStore.currentGameTag;
 
         const progressStyles = { position: "absolute", bottom: 0, left: "1em", right: "1em" };
@@ -175,27 +265,12 @@ export default class Game extends React.Component {
         return (
             <div>
                 <Well className="game-well">
-                {!gameStated ?
-                 <div>
-                    <h1>{`You are playing the tag "${tag.text}"`}</h1>
-                    <Button bsStyle="primary" bsSize="large" block onClick={() => this.startGame()}>
-                    Start Game
-                    </Button>
-                 </div>
-                 :
-                 <div>
-                    <h1>{currentEntry.text}</h1>
-                    <Button bsStyle="success" bsSize="large" className="game-btn-solve" onClick={this.solveEntry}>solved</Button>
-                    <Button bsStyle="warning" bsSize="large" className="game-btn-skip" onClick={this.skipEntry}>skip</Button>
-                 <p style={{textAlign: "center"}}>{`Solved: ${solved}, Skipped: ${skipped}`}</p>
-                    <ProgressBar active now={progress} />
-                 </div>
-                }
+                {this.renderGame()}
                 </Well>
                 <ul>
-                    <li><strong>Acceleration:</strong> {this.xA} {this.yA} {this.zA}</li>
-                    <li><strong>Acceleration including gravity:</strong> {this.xG} {this.yG} {this.zG}</li>
-                    <li><strong>Rotation rate:</strong> {this.aR} {this.bR} {this.gR}</li>
+                <li><strong>Acceleration:</strong> {(this.xA || 0).toFixed(3)} {(this.yA || 0).toFixed(3)} {(this.zA || 0).toFixed(3)}</li>
+                    <li><strong>Acceleration including gravity:</strong> {(this.xG || 0).toFixed(3)} {(this.yG || 0).toFixed(3)} {(this.zG || 0).toFixed(3)}</li>
+                    <li><strong>Rotation rate:</strong> {(this.aR || 0).toFixed(3)} {(this.bR || 0).toFixed(3)} {(this.gR || 0).toFixed(3)}</li>
                     <li><strong>Interval:</strong> {this.interval}</li>
                 </ul>
             </div>

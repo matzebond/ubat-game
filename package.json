@@ -12,7 +12,6 @@
     "nodemon:backend": "nodemon \"./build/server.js\" --watch \"./build\" --watch \"./migrations\" --delay 500ms",
     "backend": "npm-run-all --parallel watch:backend nodemon:backend",
     "pages": "BUILD_PAGES=1 webpack"
-
   },
   "dependencies": {
     "axios": "^0.15.3",
@@ -41,6 +40,7 @@
     "babel-preset-es2017-node7": "^0.5.1",
     "babel-preset-react": "^6.23.0",
     "babel-preset-stage-0": "^6.22.0",
+    "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.27.2",
     "html-webpack-plugin": "^2.28.0",
     "nodemon": "^1.11.0",

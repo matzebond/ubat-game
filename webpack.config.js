@@ -3,6 +3,7 @@ var path = require('path');
 var fs = require('fs');
 
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
@@ -21,6 +22,10 @@ const envPlug = new webpack.EnvironmentPlugin({
     HEADS_UP_BACKEND_IP: "localhost",
     HEADS_UP_BACKEND_PORT: "13750"
 });
+
+const copyPlug = new CopyWebpackPlugin([
+    {from: "assets/", to: "assets/"}
+]);
 
 var config = {
     name: 'client',
@@ -49,11 +54,13 @@ var config = {
     },
     plugins: debug ? [
         htmlPlug,
-        envPlug
+        envPlug,
+        copyPlug
 
     ] : [
         htmlPlug,
         envPlug,
+        copyPlug,
         new webpack.optimize.DedupePlugin(),
         new webpack.optimize.OccurenceOrderPlugin(),
         new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
