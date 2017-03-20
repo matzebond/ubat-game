@@ -1,16 +1,19 @@
 {
-  "name": "react-hello-world",
+  "name": "heads-up-web",
   "version": "1.0.0",
   "description": "",
-  "author": "",
-  "license": "ISC",
+  "author": "Matthias Schmitt",
+  "license": "AGPL",
   "main": "index.js",
   "scripts": {
     "dev": "webpack-dev-server",
-    "build": "webpack && webpack --config ./webpack.config.backend.js",
-    "watch:backend": "webpack --watch --config ./webpack.config.backend.js",
-    "nodemon:backend": "nodemon \"./build/server.js\" --watch \"./build\" --watch \"./migrations\" --delay 500ms",
-    "backend": "npm-run-all --parallel watch:backend nodemon:backend",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:production": "NODE_ENV=production npm run build",
+    "build:frontend": "webpack",
+    "build:backend": "webpack --config ./webpack.config.backend.js",
+    "backend:dev": "npm-run-all --parallel backend:watch backend:nodemon",
+    "backend:watch": "webpack --watch --config ./webpack.config.backend.js",
+    "backend:nodemon": "nodemon \"./build/server.js\" --watch \"./build\" --watch \"./migrations\" --delay 500ms",
     "pages": "BUILD_PAGES=1 webpack"
   },
   "dependencies": {
@@ -28,7 +31,6 @@
     "react-router-dom": "^4.0.0-beta.7",
     "react-tagsinput": "^3.15.1",
     "sqlite": "^2.3.0",
-    "sqlite3": "^3.1.8",
     "webpack": "^2.2.1"
   },
   "devDependencies": {

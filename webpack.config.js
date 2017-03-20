@@ -7,6 +7,8 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
+console.log(process.env.NODE_ENV);
+
 var buildPages = process.env.BUILD_PAGES;
 
 var APP_DIR = path.resolve(__dirname, 'src/client');
@@ -18,7 +20,7 @@ let htmlPlug = new HtmlWebpackPlugin({
 });
 
 const envPlug = new webpack.EnvironmentPlugin({
-    NODE_ENV : "development",
+    NODE_ENV : debug ? "development" : "production",
     HEADS_UP_BACKEND_IP: "localhost",
     HEADS_UP_BACKEND_PORT: "13750"
 });
@@ -61,11 +63,10 @@ var config = {
         htmlPlug,
         envPlug,
         copyPlug,
-        new webpack.optimize.DedupePlugin(),
-        new webpack.optimize.OccurenceOrderPlugin(),
         new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
+        new webpack.optimize.AggressiveMergingPlugin()//Merge chunks
     ],
-    devtool: debug ? "cheap-eval-source-map" : null,
+    devtool: debug ? "cheap-eval-source-map" : false,
     devServer: {
         contentBase: DIST_DIR,
         host: '0.0.0.0',

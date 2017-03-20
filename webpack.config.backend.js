@@ -49,13 +49,14 @@ var config = [
                 }
             ]
         },
-        plugins: [
+        plugins: debug ? [
             new webpack.BannerPlugin( {
                 banner: 'require("source-map-support").install();',
                 raw: true,
-                entryOnly: false })
-        ],
-        devtool: 'sourcemap'
+                entryOnly: false }),
+        ]
+        : [],
+        devtool: debug ? 'sourcemap' : false
 
     }
 ];

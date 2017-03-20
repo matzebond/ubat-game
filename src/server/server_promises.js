@@ -6,6 +6,7 @@ import db from 'sqlite';
 import Tag from "../data/Tag";
 import Entry from "../data/Entry";
 
+const production = process.env.NODE_ENV === 'production';
 
 const dbFile = './build/db.sqlite';
 
@@ -301,7 +302,9 @@ app.get("/entry/:id", (req, res) => {
 Promise.resolve()
 // First, try connect to the database and update its schema to the latest version
     .then(() => db.open(dbFile, { verbose: true, Promise }))
-    .then(() => db.migrate({ force: 'last' }))
+    .then(() => {
+        db.migrate({ force: production ? null : 'last' }); // reset db when debugging
+    })
     .catch(err => console.error("db open or migration error\n" + err.stack))
 // Finally, launch Node.js app
     .finally(() => {
