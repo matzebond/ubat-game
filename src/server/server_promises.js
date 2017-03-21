@@ -1,6 +1,5 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import Promise from 'bluebird';
 import db from 'sqlite';
 
 import Tag from "../data/Tag";
@@ -303,11 +302,13 @@ Promise.resolve()
 // First, try connect to the database and update its schema to the latest version
     .then(() => db.open(dbFile, { verbose: true, Promise }))
     .then(() => {
-        db.migrate({ force: production ? null : 'last' }); // reset db when debugging
+        let force = production ? null : "last";
+        console.log("force: " + force);
+        db.migrate({ force }); // reset db when debugging
     })
     .catch(err => console.error("db open or migration error\n" + err.stack))
 // Finally, launch Node.js app
-    .finally(() => {
+    .then(() => {
         let server = app.listen(port, (err) => {
             if (err) {
                 console.log('something bad happened', err);

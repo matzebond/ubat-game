@@ -267,12 +267,6 @@ export default class Game extends React.Component {
                 <Well className="game-well">
                 {this.renderGame()}
                 </Well>
-                <ul>
-                <li><strong>Acceleration:</strong> {(this.xA || 0).toFixed(3)} {(this.yA || 0).toFixed(3)} {(this.zA || 0).toFixed(3)}</li>
-                    <li><strong>Acceleration including gravity:</strong> {(this.xG || 0).toFixed(3)} {(this.yG || 0).toFixed(3)} {(this.zG || 0).toFixed(3)}</li>
-                    <li><strong>Rotation rate:</strong> {(this.aR || 0).toFixed(3)} {(this.bR || 0).toFixed(3)} {(this.gR || 0).toFixed(3)}</li>
-                    <li><strong>Interval:</strong> {this.interval}</li>
-                </ul>
             </div>
         );
     }

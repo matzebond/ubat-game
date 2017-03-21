@@ -22,6 +22,13 @@ fs.readdirSync('node_modules')
         nodeModules[mod] = 'commonjs ' + mod;
     });
 
+
+const envPlug = new webpack.EnvironmentPlugin({
+    NODE_ENV : debug ? "development" : "production",
+    HEADS_UP_BACKEND_IP: "localhost",
+    HEADS_UP_BACKEND_PORT: "13750"
+});
+
 var config = [
     {
         name: 'server',
@@ -35,7 +42,10 @@ var config = [
             path: BUILD_DIR,
             filename: 'server.js'
         },
-        externals: nodeModules,
+        externals: {
+            sqlite: 'commonjs sqlite',
+            sqlite3: 'commonjs sqlite3'
+        }, //instead of nodeModules
         module: {
             loaders : [
                 {
@@ -50,12 +60,13 @@ var config = [
             ]
         },
         plugins: debug ? [
+            envPlug,
             new webpack.BannerPlugin( {
                 banner: 'require("source-map-support").install();',
                 raw: true,
                 entryOnly: false }),
         ]
-        : [],
+        : [envPlug],
         devtool: debug ? 'sourcemap' : false
 
     }

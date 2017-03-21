@@ -4,6 +4,7 @@ var fs = require('fs');
 
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
+var Visualizer = require('webpack-visualizer-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
@@ -49,10 +50,25 @@ var config = {
                 loader: 'babel-loader',
                 query: {
                     presets: ["react", "es2015", "stage-0"],
-                    plugins: ['transform-decorators-legacy', 'transform-class-properties'] // needed for mobX
+                    plugins: [
+                        'transform-decorators-legacy', 'transform-class-properties', // needed for mobX
+                        ["transform-imports", {
+                            "react-bootstrap": {
+                                "transform": "react-bootstrap/lib/${member}",
+                                "preventFullImport": true
+                            }
+                        }]
+
+                    ]
                 }
             },
         ]
+    },
+    resolve: {
+        alias: {
+            react: 'preact-compat',
+            'react-dom': 'preact-compat'
+        }
     },
     plugins: debug ? [
         htmlPlug,
@@ -63,6 +79,7 @@ var config = {
         htmlPlug,
         envPlug,
         copyPlug,
+        new Visualizer(),
         new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
         new webpack.optimize.AggressiveMergingPlugin()//Merge chunks
     ],
