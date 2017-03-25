@@ -28,7 +28,7 @@ export default class Header extends React.Component {
                     <Link to="/">Home</Link>
                 </p>
                 <p style={{float: "right"}}>
-                    <input type="checkbox" onClick={this.handler.bind(this)}/> fullscreen
+                    <input type="checkbox" checked={screenfull.isFullscreen} onClick={this.handler.bind(this)}/> fullscreen
                 </p>
             </header>
         );

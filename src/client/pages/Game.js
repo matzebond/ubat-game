@@ -43,7 +43,7 @@ function triggerAudio(audio) {
 }
 
 const updateTime = 200;
-const minGestureTime = 1000;
+const minGestureTime = 3000;
 const thresholdAccX = 2;
 const thresholdAccY = 1.6;
 const thresholdRotA = 150;
