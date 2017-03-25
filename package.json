@@ -1,11 +1,11 @@
 {
-  "name": "heads-up-web",
+  "name": "ubat-game",
   "version": "1.0.0",
   "description": "",
   "author": "Matthias Schmitt",
   "license": "AGPL-3.0",
   "main": "index.js",
-  "repository": "matzebond/heads-up-web",
+  "repository": "matzebond/ubat-game",
   "scripts": {
     "dev": "webpack-dev-server",
     "clean": "rm -rf ./build ./dist",

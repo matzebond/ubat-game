@@ -22,8 +22,8 @@ let htmlPlug = new HtmlWebpackPlugin({
 
 const envPlug = new webpack.EnvironmentPlugin({
     NODE_ENV : debug ? "development" : "production",
-    HEADS_UP_BACKEND_IP: "localhost",
-    HEADS_UP_BACKEND_PORT: "13750"
+    UBAT_IP: "localhost",
+    UBAT_PORT: "13750"
 });
 
 const copyPlug = new CopyWebpackPlugin([
@@ -36,7 +36,7 @@ var config = {
     output: {
         path: DIST_DIR,
         filename: 'bundle.js',
-        publicPath: buildPages ? '/heads-up-web/' : '/'
+        publicPath: '/'
     },
     module: {
         rules: [

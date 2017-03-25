@@ -1,4 +1,4 @@
-# heads-up-web
+# ubat
 [![Build Status](https://travis-ci.org/matzebond/heads-up-web.svg?branch=master)](https://travis-ci.org/matzebond/heads-up-web)
 
 A pretty fun party game :)
@@ -79,7 +79,7 @@ the website will be build to `./dist`
 
 the server (`server.js`) will be build to `./build`
 
-the environment variables `HEADS_UP_BACKEND_IP` (default `localhost`) and `HEADS_UP_BACKEND_PORT` (default `13750`)
+the environment variables `UBAT_IP` (default `localhost`) and `UBAT_PORT` (default `13750`)
 are used to determine the address of the backend used by the AJAX requests
 
 

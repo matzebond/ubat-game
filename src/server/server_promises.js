@@ -14,7 +14,7 @@ const migrationsPath = path.resolve(__dirname, 'migrations');
 console.log("database at " + databasePath);
 console.log("migrations at " + migrationsPath);
 
-const port = parseInt(process.env.HEADS_UP_BACKEND_PORT, 10) || 13750;
+const port = parseInt(process.env.UBAT_PORT, 10) || 13750;
 const app = express();
 
 const allowCrossDomain = function(req, res, next) {
