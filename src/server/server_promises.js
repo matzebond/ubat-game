@@ -1,3 +1,4 @@
+import path from 'path';
 import express from 'express';
 import bodyParser from 'body-parser';
 import db from 'sqlite';
@@ -7,7 +8,11 @@ import Entry from "../data/Entry";
 
 const production = process.env.NODE_ENV === 'production';
 
-const dbFile = './build/db.sqlite';
+const databasePath = path.resolve(__dirname, 'db.sqlite');
+const migrationsPath = path.resolve(__dirname, 'migrations');
+
+console.log("database at " + databasePath);
+console.log("migrations at " + migrationsPath);
 
 const port = parseInt(process.env.HEADS_UP_BACKEND_PORT, 10) || 13750;
 const app = express();
@@ -300,11 +305,11 @@ app.get("/entry/:id", (req, res) => {
 
 Promise.resolve()
 // First, try connect to the database and update its schema to the latest version
-    .then(() => db.open(dbFile, { verbose: true, Promise }))
+    .then(() => db.open(databasePath, { verbose: true, Promise }))
     .then(() => {
         let force = production ? null : "last";
         console.log("force: " + force);
-        db.migrate({ force }); // reset db when debugging
+        db.migrate({ migrationsPath, force }); // reset db when debugging
     })
     .catch(err => console.error("db open or migration error\n" + err.stack))
 // Finally, launch Node.js app

@@ -8,7 +8,7 @@ var Visualizer = require('webpack-visualizer-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
-console.log(process.env.NODE_ENV);
+console.log("building with NODE_ENV=" + process.env.NODE_ENV);
 
 var buildPages = process.env.BUILD_PAGES;
 
@@ -27,7 +27,7 @@ const envPlug = new webpack.EnvironmentPlugin({
 });
 
 const copyPlug = new CopyWebpackPlugin([
-    {from: "assets/", to: "assets/"}
+    {from: "./assets", to: "assets/"}
 ]);
 
 var config = {

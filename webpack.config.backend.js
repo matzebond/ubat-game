@@ -2,26 +2,12 @@ var webpack = require('webpack');
 var path = require('path');
 var fs = require('fs');
 
-var HtmlWebpackPlugin = require('html-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
-var APP_DIR = path.resolve(__dirname, 'src/client');
-var DIST_DIR = path.resolve(__dirname, 'dist');
-
 var SERVER_DIR = path.resolve(__dirname, 'src/server');
 var BUILD_DIR = path.resolve(__dirname, 'build');
-
-
-var nodeModules = {};
-fs.readdirSync('node_modules')
-    .filter(function(x) {
-        return ['.bin'].indexOf(x) === -1;
-    })
-    .forEach(function(mod) {
-        nodeModules[mod] = 'commonjs ' + mod;
-    });
-
 
 const envPlug = new webpack.EnvironmentPlugin({
     NODE_ENV : debug ? "development" : "production",
@@ -29,23 +15,28 @@ const envPlug = new webpack.EnvironmentPlugin({
     HEADS_UP_BACKEND_PORT: "13750"
 });
 
+const copyPlug = new CopyWebpackPlugin([
+    {from: "./migrations", to: "migrations/"},
+]);
+
 var config = [
     {
         name: 'server',
         entry: SERVER_DIR + '/server_promises.js',
         target: 'node',
-        // node: {
-        //     __filename: true,
-        //     __dirname: true,
-        // },
+        node: {
+            __filename: false,
+            __dirname: false //__dirname points to the directory of the bundled file
+        },
         output: {
             path: BUILD_DIR,
             filename: 'server.js'
         },
+        // dont bundle sqlite and sqlite3 because native modules don't want to be bundled
         externals: {
             sqlite: 'commonjs sqlite',
             sqlite3: 'commonjs sqlite3'
-        }, //instead of nodeModules
+        },
         module: {
             loaders : [
                 {
@@ -53,20 +44,21 @@ var config = [
                     exclude: /(node_modules|bower_components)/,
                     loader: 'babel-loader',
                     query: {
-                        "presets": ["es2017-node7"],
-                        plugins: ['transform-decorators-legacy', 'transform-class-properties'],
+                        presets: ["es2017-node7"],
+                        plugins: ['transform-decorators-legacy', 'transform-class-properties']
                     }
                 }
             ]
         },
         plugins: debug ? [
             envPlug,
+            copyPlug,
             new webpack.BannerPlugin( {
                 banner: 'require("source-map-support").install();',
                 raw: true,
                 entryOnly: false }),
         ]
-        : [envPlug],
+        : [envPlug, copyPlug],
         devtool: debug ? 'sourcemap' : false
 
     }
