@@ -1,9 +1,12 @@
 #!/bin/sh
 
+user=deploy
 ip=85.217.170.182
-headsupdir=/var/www/heads-up-web
+dir=/var/www/ubat-game
+target="$user@$ip:$dir"
 
-HEADS_UP_BACKEND_IP=$ip npm run build:production && \
-scp -r ./dist deploy@$ip:$headsupdir && \
-scp -r ./build deploy@$ip:$heaysupdir && \
-ssh deploy@$ip forever restart $headsupdir/build/server.js
+UBAT_IP=$ip npm run build:production && \
+echo "backing up database" && \
+rsync -aIhi --delete --delete-excluded --exclude=stats.html ./dist $target && \
+rsync -aIhi --delete --exclude=db.sqlite ./build $target && \
+ssh $user@$ip "source ~/.profile; forever restart $dir/build/server.js"

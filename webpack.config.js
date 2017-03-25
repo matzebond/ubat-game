@@ -1,12 +1,17 @@
 var webpack = require('webpack');
 var path = require('path');
 var fs = require('fs');
+var execSync = require('child_process').execSync;
 
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var Visualizer = require('webpack-visualizer-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
+
+let version = execSync('git describe --tags --abbrev=0');
+
+console.log('version ' + version);
 
 console.log("building with NODE_ENV=" + process.env.NODE_ENV);
 
@@ -20,8 +25,12 @@ let htmlPlug = new HtmlWebpackPlugin({
     inject: 'body'
 });
 
+const defPlug = new webpack.DefinePlugin({
+    UBAT_VERSION: JSON.stringify(version.toString())
+});
+
 const envPlug = new webpack.EnvironmentPlugin({
-    NODE_ENV : debug ? "development" : "production",
+    NODE_ENV: 'development', // use 'development' unless process.env.NODE_ENV is defined
     UBAT_IP: "localhost",
     UBAT_PORT: "13750"
 });
@@ -72,11 +81,13 @@ var config = {
     },
     plugins: debug ? [
         htmlPlug,
+        defPlug,
         envPlug,
         copyPlug
 
     ] : [
         htmlPlug,
+        defPlug,
         envPlug,
         copyPlug,
         new Visualizer(),
