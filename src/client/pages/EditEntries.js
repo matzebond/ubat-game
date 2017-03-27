@@ -4,7 +4,9 @@ import { Button, Grid, Row, Col } from "react-bootstrap";
 
 import EntryStore from "../EntryStore";
 
-import Entry from "../components/Entry";
+import EntryCompoment from "../components/EntryComponent";
+
+import Entry from "../../data/Entry.js";
 
 @observer
 export default class EditEntries extends React.Component {
@@ -36,31 +38,35 @@ export default class EditEntries extends React.Component {
 
     mapEntry(entry, index) {
         return (
-                <Row className="show-grid" key={entry.id}>
-                <Col md={5} xs={5}>
+            <Row className="show-grid" key={entry.id}>
+              <Col md={5} xs={5}>
                 <p style={{fontSize: "15px"}}>{entry.text}</p>
-                </Col>
+              </Col>
 
-                <Col md={3} xs={3}>
-                <Button block bsStyle="primary" onClick={this.updateEntry.bind(this, entry.id, index)}>Edit</Button>
-                </Col>
-                <Col md={3} xs={3}>
-                <Button block bsStyle="danger" onClick={this.deleteEntry.bind(this, entry.id, index)}>Delete</Button>
-                </Col>
+              <Col md={3} xs={3}>
+                <Button block bsStyle="primary"
+                        onClick={this.updateEntry.bind(this, entry.id, index)}>
+                  Edit
+                </Button>
+              </Col>
+              <Col md={3} xs={3}>
+                <Button block bsStyle="danger"
+                        onClick={this.deleteEntry.bind(this, entry.id, index)}>
+                  Delete
+                </Button>
+              </Col>
 
-                {entry.id === this.state.active ?
-                 <Col md={12} xs={12}>
-                <Entry
-                    onSubmit={EntryStore.updateEntry}
-                    onAbort={() => { this.setState({active: null}); }}
-                    id={entry.id}
-                    text={entry.text}
-                    tags={entry.tags.slice()}
-                    store={EntryStore}
-                    clearData={false} />
-                 </Col>
-                 : null
-                }
+              {entry.id === this.state.active ?
+                  <Col md={12} xs={12}>
+                        <EntryCompoment
+                              entry={entry}
+                              allTags={EntryStore.tags}
+                              onSubmit={EntryStore.updateEntry}
+                              onAbort={() => { this.setState({active: null}); }}
+                              clearOnSuccessCallback={false} />
+                  </Col>
+                  : null
+              }
 
             </Row>
         );
