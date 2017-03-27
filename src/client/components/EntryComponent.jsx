@@ -5,6 +5,7 @@ import Autosuggest from 'react-autosuggest';
 
 import ResponseAlert from "./ResponseAlert";
 import TagsComponent from "./TagsComponent";
+import TranslationsComponent from "./TranslationsComponent";
 
 import "./Entry.css";
 
@@ -109,6 +110,7 @@ export default class EntryCompoment extends React.Component {
                 <input className="form-control input-lg" value={text}
                        onChange={this.handleEntryTextChange} placeholder={'Enter phrase'}/>
 
+                <TranslationsComponent />
 
                 <TagsComponent tags={this.props.tags}
                                onTagsChange={this.handleTagsChange}/>
