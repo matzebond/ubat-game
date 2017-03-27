@@ -1,5 +1,5 @@
 # ubat
-[![Build Status](https://travis-ci.org/matzebond/heads-up-web.svg?branch=master)](https://travis-ci.org/matzebond/heads-up-web)
+[![Build Status](https://travis-ci.org/matzebond/ubat-game.svg?branch=master)](https://travis-ci.org/matzebond/ubat-game)
 
 A pretty fun party game :)
 

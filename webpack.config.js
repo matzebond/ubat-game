@@ -77,7 +77,8 @@ var config = {
         alias: {
             react: 'preact-compat',
             'react-dom': 'preact-compat'
-        }
+        },
+        extensions: [".js", ".jsx", ".json"]
     },
     plugins: debug ? [
         htmlPlug,
