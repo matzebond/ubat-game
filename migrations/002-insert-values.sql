@@ -83,7 +83,7 @@ INSERT INTO entries VALUES(84,'Indiana Jones');
 INSERT INTO entries VALUES(85,'James Bond');
 INSERT INTO entries VALUES(86,'Austin Powers');
 INSERT INTO entries VALUES(87,'Braveheart');
-INSERT INTO entries VALUES(88,'Space Odysee');
+INSERT INTO entries VALUES(88,'2001: A Space Odysee');
 INSERT INTO entries VALUES(89,'Back to the Future');
 INSERT INTO entries VALUES(90,'The Shining');
 INSERT INTO entries VALUES(91,'The Ring');

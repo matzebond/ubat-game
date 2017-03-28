@@ -20,7 +20,6 @@ CREATE TABLE entry_tag_map (
        FOREIGN KEY(tag_id) REFERENCES tags(id)
 );
 
-
 CREATE VIEW entry_tag_view AS
        SELECT e.id AS entry_id, e.text AS entry_text, t.id AS tag_id, t.text AS tag_text
        FROM entries AS e
@@ -32,7 +31,7 @@ CREATE VIEW entry_tag_view AS
 -- Down
 ----------------------------------------------------------
 
+DROP VIEW entry_tag_view;
+DROP TABLE entry_tag_map;
 DROP TABLE entries;
 DROP TABLE tags;
-DROP TABLE entry_tag_map;
-DROP VIEW entry_tag_view;
