@@ -105,7 +105,7 @@ app.post("/entry/add", async (req, res) => {
     try {
         entry = parseEntryBody(req.body);
 
-        if (entry !== null) {
+        if (entry.id !== null) {
             throw `can't add entry with id ${entry.id}`;
         }
     }
@@ -117,16 +117,14 @@ app.post("/entry/add", async (req, res) => {
 
     const result = await wrapper.updateEntry(entry);
 
+    if (result.entry === undefined) {
+        res.status(result.status).send(result.msg).end();
+        return;
+    }
+
     //return the created entry and all tags
     const tags = await wrapper.getTagList();
-    res.json({entry, tags}).end();
-
-        .catch(err => {
-            console.log(err);
-            if(!res.statusCode) res.status(500);
-            if (typeof err === 'string') res.send(err);
-            res.end();
-        });
+    res.json({entry: result.entry, tags}).end();
 });
 
 app.post("/entry/update", async (req, res) => {
@@ -142,48 +140,14 @@ app.post("/entry/update", async (req, res) => {
         return;
     }
 
-    try {
-        // update entry text
-        // TODO do better ??
-        let result = await db.run(`UPDATE entries SET text = ? WHERE id = ?`, entry.text, entry.id)
-            .catch( err => {
-                return -1;
-            });
-
-        if (result == -1) throw `entry text "${entry.text}" is already used`;
-
-
-
-        // delete tag relations
-        await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entry.id);
-
-        // create tags and/or add relations
-        entry.tags.map(async (tag) => {
-            // get tag.id if tag already exists
-            let tagID = await db.get(`SELECT id FROM tags WHERE text LIKE ?`, tag);
-
-            // otherwise insert new tag
-            if (!tagID) {
-                const stmt = await db.run(`INSERT INTO tags VALUES (NULL, ?)`, tag);
-                tagID = stmt.lastID;
-            }
-            else{
-                tagID = tagID.id;
-            }
-            // add relation form new entry to (new or existing) tag
-            db.run(`INSERT INTO entry_tag_map VALUES (?,?)`, entry.id, tagID);
-        });
-
-        //return the created entry and all tags
-        const tags = await wrapper.getTagList();
-        res.json({entry, tags}).end();
+    if (result.entry === undefined) {
+        res.status(result.status).send(result.msg).end();
+        return;
     }
-    catch (err) {
-        console.log(err);
-        res.status(500);
-        if (typeof err === 'string') res.send(err);
-        res.end();
-    }
+
+    //return the updated entry and all tags
+    const tags = await wrapper.getTagList();
+    res.json({entry: result.entry, tags}).end();
 });
 
 app.delete("/entry/delete/:id", async (req, res) => {
@@ -208,11 +172,8 @@ app.delete("/entry/delete/:id", async (req, res) => {
 });
 
 app.get("/entry/list", (req, res) => {
-    db.all(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_text, ';') AS tags
-            FROM entry_tag_view
-            GROUP BY entry_id`)
-        .then(rows => {
-            const entries = rows.map(row => Entry.fromDB(row));
+    wrapper.getEntryList("" )
+        .then(entries => {
             res.json(entries).end();
         })
         .catch(err => {
@@ -223,13 +184,9 @@ app.get("/entry/list", (req, res) => {
 
 app.get("/entry/search/:text", (req, res) => {
     const entryText = req.params.text;
-    db.all(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_text, ';') AS tags
-            FROM entry_tag_view
-            WHERE entry_text LIKE ?
-            GROUP BY entry_id`, entryText+'%')
-        .then(rows => {
-            const entrys = rows.map(row => Entry.fromDB(row));
-            res.json(entrys).end();
+    wrapper.getEntryList(entryText, true)
+        .then(entries => {
+            res.json(entries).end();
         })
         .catch(err => {
             console.log(err);
@@ -239,17 +196,12 @@ app.get("/entry/search/:text", (req, res) => {
 
 app.get("/entry/:id", (req, res) => {
     const entryID = req.params.id;
-    db.get(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_text, ';') AS tags
-            FROM entry_tag_view
-            WHERE entry_id = ?
-            GROUP BY entry_id`, entryID)
-        .then(row => {
-            if (!row) {
+    wrapper.getEntryByID(entryID)
+        .then(entry => {
+            if (!entry) {
                 res.status(404).send(`no entry with id ${entryID}`).end();
                 return;
             }
-            console.log(row);
-            const entry = Entry.fromDB(row);
             res.json(entry).end();
         })
         .catch(err => {

@@ -1,5 +1,7 @@
 import {observable} from "mobx";
 
+import Tag from "./Tag.js";
+
 export default class Entry {
     @observable id;
     @observable text;
@@ -11,8 +13,8 @@ export default class Entry {
         this.tags = tags;
     }
 
-    static fromDB({id, text, tags}) {
-        tags = tags.split(';');
+    static fromDB({id, text, tagIDs}) {
+        const tags = tagIDs.split(';').map(id => new Tag({id}));
         return new Entry({id, text, tags});
     }
 }
