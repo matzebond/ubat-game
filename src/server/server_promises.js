@@ -3,6 +3,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import db from 'sqlite';
 
+import DatabaseWrapper from './databaseWrapper.js';
+let wrapper = null;
+
 import Tag from "../data/Tag";
 import Entry from "../data/Entry";
 
@@ -31,20 +34,9 @@ app.use(allowCrossDomain);
 
 
 
-const getTagList = () => {
-    return db.all(`SELECT t.id, t.text, COUNT(etm.tag_id) AS count
-                    FROM tags AS t
-                    LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
-                    GROUP BY t.id
-                    ORDER BY t.id`)
-        .then( rows => {
-            const tags = rows.map(row => new Tag(row));
-            return tags;
-        });
-};
 
 app.get("/tag/list", (req, res) => {
-    getTagList()
+    wrapper.getTagList()
         .then(tags => {
             res.json(tags).end();
         })
@@ -55,14 +47,10 @@ app.get("/tag/list", (req, res) => {
         });
 });
 
-app.get("/tag/text/:text", (req, res) => {
+app.get("/tag/search/:text", (req, res) => {
     const tagText = req.params.text;
-    db.all(`SELECT tag_id AS id, tag_text AS text, COUNT(entry_id) AS count
-            FROM entry_tag_view
-            WHERE tag_text LIKE ?
-            GROUP BY tag_id`, tagText+'%')
-        .then(rows => {
-            const tags = rows.map(row => new Tag(row));
+    wrapper.getTagList(tagText)
+        .then(tags => {
             res.json(tags).end();
         })
         .catch(err => {
@@ -73,16 +61,12 @@ app.get("/tag/text/:text", (req, res) => {
 
 app.get("/tag/:id", (req, res) => {
     const tagID = req.params.id;
-    db.get(`SELECT tag_id AS id, tag_text AS text, COUNT(entry_id) AS count
-            FROM entry_tag_view
-            WHERE tag_id = ?
-            GROUP BY tag_id`, tagID)
-        .then(row => {
-            if (!row) {
+    wrapper.getTagById(tagID)
+        .then(tag => {
+            if (!tag) {
                 res.status(404).send(`no tag with id ${tagID}`).end();
                 return;
             }
-            const tag = new Tag(row);
             res.json(tag).end();
         })
         .catch(err => {
@@ -115,11 +99,15 @@ const parseEntryBody = function (body) {
     return entry;
 };
 
-app.post("/entry/add", (req, res) => {
+app.post("/entry/add", async (req, res) => {
     console.log("add", JSON.stringify(req.body));
     let entry = null;
     try {
         entry = parseEntryBody(req.body);
+
+        if (entry !== null) {
+            throw `can't add entry with id ${entry.id}`;
+        }
     }
     catch (err) {
         console.log(err);
@@ -127,45 +115,12 @@ app.post("/entry/add", (req, res) => {
         return;
     }
 
-    // try inserting entry.text as new entry
-    db.run(`INSERT INTO entries VALUES (NULL, ?)`, entry.text)
-          .then(stmt => {
-              if (!stmt.lastID) {
-                  reject("No lastID after insert into entries.");
-              }
-              entry.id = stmt.lastID;
-              return stmt.lastID;
-          })
-    // catch error when entry already exists, and send message + error code
-    // Attention: db error catches as duplicate error
-          .catch(err => {
-              console.log("duplicate entry");
-              res.status(409).send(`duplicate: entry with text "${entry.text}" already exists`).end();
-              throw null;
-          })
-    // for every specified tag: insert tag when new and create relation to the entry
-          .then((entryID) => {
-              return Promise.all(entry.tags.map(async (tag) => {
-                  // get tag.id if tag already exists
-                  let tagID = await db.get(`SELECT id FROM tags WHERE text LIKE ?`, tag);
+    const result = await wrapper.updateEntry(entry);
 
-                  // otherwise insert new tag
-                  if (!tagID) {
-                      let stmt = await db.run(`INSERT INTO tags VALUES (NULL, ?)`, tag);
-                      tagID = stmt.lastID;
-                  }
-                  else{
-                      tagID = tagID.id;
-                  }
-                  // add relation form new entry to (new or existing) tag
-                  db.run(`INSERT INTO entry_tag_map VALUES (?,?)`, entryID, tagID);
-              }));
-          })
-        .then(async () => {
-            //return the created entry and all tags
-            const tags = await getTagList();
-            res.json({entry, tags}).end();
-        })
+    //return the created entry and all tags
+    const tags = await wrapper.getTagList();
+    res.json({entry, tags}).end();
+
         .catch(err => {
             console.log(err);
             if(!res.statusCode) res.status(500);
@@ -220,7 +175,7 @@ app.post("/entry/update", async (req, res) => {
         });
 
         //return the created entry and all tags
-        const tags = await getTagList();
+        const tags = await wrapper.getTagList();
         res.json({entry, tags}).end();
     }
     catch (err) {
@@ -266,7 +221,7 @@ app.get("/entry/list", (req, res) => {
         });
 });
 
-app.get("/entry/text/:text", (req, res) => {
+app.get("/entry/search/:text", (req, res) => {
     const entryText = req.params.text;
     db.all(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_text, ';') AS tags
             FROM entry_tag_view
@@ -305,7 +260,10 @@ app.get("/entry/:id", (req, res) => {
 
 Promise.resolve()
 // First, try connect to the database and update its schema to the latest version
-    .then(() => db.open(databasePath, { verbose: true, Promise }))
+    .then(() => {
+        db.open(databasePath, { verbose: true, Promise });
+        wrapper = new DatabaseWrapper(db);
+    })
     .then(() => {
         let force = production ? null : "last";
         console.log("force: " + force);
