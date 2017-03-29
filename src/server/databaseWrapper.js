@@ -143,7 +143,7 @@ export default class DatabaseWrapper {
                     console.log("illegal entry addition: duplicate entry, text already in use");
                     console.log(err);
                     const msg = `duplicate: entry with text "${entry.text}" already exists`;
-                    return {status: 409, msg};
+                    return {status: 303, msg};
                 }
             }
             else {

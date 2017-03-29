@@ -34,11 +34,10 @@ app.use(allowCrossDomain);
 
 
 
-
-app.get("/tag/list", (req, res) => {
+app.get("/tags/list", (req, res) => {
     wrapper.getTagList()
         .then(tags => {
-            res.json(tags).end();
+            res.status(200).json(tags).end();
         })
         .catch(err => {
             console.log(err);
@@ -47,11 +46,11 @@ app.get("/tag/list", (req, res) => {
         });
 });
 
-app.get("/tag/search/:text", (req, res) => {
+app.get("/tags/search/:text", (req, res) => {
     const tagText = req.params.text;
     wrapper.getTagList(tagText)
         .then(tags => {
-            res.json(tags).end();
+            res.status(200).json(tags).end();
         })
         .catch(err => {
             console.log(err);
@@ -59,7 +58,7 @@ app.get("/tag/search/:text", (req, res) => {
         });
 });
 
-app.get("/tag/:id", (req, res) => {
+app.get("/tags/:id", (req, res) => {
     const tagID = req.params.id;
     wrapper.getTagById(tagID)
         .then(tag => {
@@ -67,14 +66,13 @@ app.get("/tag/:id", (req, res) => {
                 res.status(404).send(`no tag with id ${tagID}`).end();
                 return;
             }
-            res.json(tag).end();
+            res.status(200).json(tag).end();
         })
         .catch(err => {
             console.log(err);
             res.status(500).end();
         });
 });
-
 
 
 
@@ -99,7 +97,7 @@ const parseEntryBody = function (body) {
     return entry;
 };
 
-app.post("/entry/add", async (req, res) => {
+app.post("/entries", async (req, res) => {
     console.log("add", JSON.stringify(req.body));
     let entry = null;
     try {
@@ -124,10 +122,10 @@ app.post("/entry/add", async (req, res) => {
 
     //return the created entry and all tags
     const tags = await wrapper.getTagList();
-    res.json({entry: result.entry, tags}).end();
+    res.status(201).json({entry: result.entry, tags}).end();
 });
 
-app.post("/entry/update", async (req, res) => {
+app.put("/entries/:id", async (req, res) => {
     console.log("update", JSON.stringify(req.body));
 
     let entry = null;
@@ -147,10 +145,10 @@ app.post("/entry/update", async (req, res) => {
 
     //return the updated entry and all tags
     const tags = await wrapper.getTagList();
-    res.json({entry: result.entry, tags}).end();
+    res.status(200).json({entry: result.entry, tags}).end();
 });
 
-app.delete("/entry/delete/:id", async (req, res) => {
+app.delete("/entries/:id", async (req, res) => {
     const entryID = req.params.id;
     console.log("delete " + entryID);
     try {
@@ -171,8 +169,9 @@ app.delete("/entry/delete/:id", async (req, res) => {
     }
 });
 
-app.get("/entry/list", (req, res) => {
-    wrapper.getEntryList("" )
+app.get("/entries", (req, res) => {
+    const entryText = req.query.q;
+    wrapper.getEntryList(entryText)
         .then(entries => {
             res.json(entries).end();
         })
@@ -182,19 +181,7 @@ app.get("/entry/list", (req, res) => {
         });
 });
 
-app.get("/entry/search/:text", (req, res) => {
-    const entryText = req.params.text;
-    wrapper.getEntryList(entryText, true)
-        .then(entries => {
-            res.json(entries).end();
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).end();
-        });
-});
-
-app.get("/entry/:id", (req, res) => {
+app.get("/entries/:id", (req, res) => {
     const entryID = req.params.id;
     wrapper.getEntryByID(entryID)
         .then(entry => {
