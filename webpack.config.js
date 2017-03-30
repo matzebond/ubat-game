@@ -93,6 +93,7 @@ var config = {
         copyPlug,
         new Visualizer(),
         new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
+        new webpack.LoaderOptionsPlugin({ minimize: true, debug: false }),
         new webpack.optimize.AggressiveMergingPlugin()//Merge chunks
     ],
     devtool: debug ? "cheap-eval-source-map" : false,

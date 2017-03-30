@@ -6,7 +6,7 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var debug = process.env.NODE_ENV !== "production";
 
-var SERVER_DIR = path.resolve(__dirname, 'src/server');
+var SRC_DIR = path.resolve(__dirname, 'src/backend');
 var BUILD_DIR = path.resolve(__dirname, 'build');
 
 const envPlug = new webpack.EnvironmentPlugin({
@@ -21,8 +21,8 @@ const copyPlug = new CopyWebpackPlugin([
 
 var config = [
     {
-        name: 'server',
-        entry: SERVER_DIR + '/index.js',
+        name: 'backend',
+        entry: SRC_DIR + '/index.js',
         target: 'node',
         node: {
             __filename: false,
@@ -30,7 +30,7 @@ var config = [
         },
         output: {
             path: BUILD_DIR,
-            filename: 'server.js'
+            filename: 'backend.js'
         },
         // dont bundle sqlite and sqlite3 because native modules don't want to be bundled
         externals: {
