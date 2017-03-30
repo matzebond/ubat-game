@@ -1,4 +1,3 @@
-import path from 'path';
 import express from 'express';
 import bodyParser from 'body-parser';
 import db from 'sqlite';
@@ -9,15 +8,6 @@ let wrapper = null;
 import Tag from "../data/Tag";
 import Entry from "../data/Entry";
 
-const production = process.env.NODE_ENV === 'production';
-
-const databasePath = path.resolve(__dirname, 'db.sqlite');
-const migrationsPath = path.resolve(__dirname, 'migrations');
-
-console.log("database at " + databasePath);
-console.log("migrations at " + migrationsPath);
-
-const port = parseInt(process.env.UBAT_PORT, 10) || 13750;
 const app = express();
 
 const allowCrossDomain = function(req, res, next) {
@@ -34,20 +24,8 @@ app.use(allowCrossDomain);
 
 
 
-app.get("/tags/list", (req, res) => {
-    wrapper.getTagList()
-        .then(tags => {
-            res.status(200).json(tags).end();
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).send("internal server error").end();
-            return;
-        });
-});
-
-app.get("/tags/search/:text", (req, res) => {
-    const tagText = req.params.text;
+app.get("/tags", (req, res) => {
+    const tagText = req.query.q;
     wrapper.getTagList(tagText)
         .then(tags => {
             res.status(200).json(tags).end();
@@ -197,27 +175,20 @@ app.get("/entries/:id", (req, res) => {
         });
 });
 
-Promise.resolve()
-// First, try connect to the database and update its schema to the latest version
-    .then(() => {
-        db.open(databasePath, { verbose: true, Promise });
-        wrapper = new DatabaseWrapper(db);
-    })
-    .then(() => {
-        let force = production ? null : "last";
-        console.log("force: " + force);
-        db.migrate({ migrationsPath, force }); // reset db when debugging
-    })
-    .catch(err => console.error("db open or migration error\n" + err.stack))
-// Finally, launch Node.js app
-    .then(() => {
-        let server = app.listen(port, (err) => {
-            if (err) {
-                console.log('something bad happened', err);
-                return;
-            }
-            let host = server.address().address;
-            let port = server.address().port;
-            console.log(`Example app listening at http://${host}:${port}`);
-        });
+
+
+export default function start_server(db, port) {
+    wrapper = new DatabaseWrapper(db);
+
+    let server = app.listen(port, (err) => {
+        if (err) {
+            console.log('something bad happened', err);
+            return;
+        }
+        let host = server.address().address;
+        let port = server.address().port;
+        console.log(`rest api listening at http://${host}:${port}`);
     });
+}
+
+

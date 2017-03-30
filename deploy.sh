@@ -1,7 +1,7 @@
 #!/bin/sh
 
 user=deploy
-ip=85.217.170.182
+ip=ubat-game.de
 dir=/var/www/ubat-game
 target="$user@$ip:$dir"
 

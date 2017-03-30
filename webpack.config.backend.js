@@ -22,7 +22,7 @@ const copyPlug = new CopyWebpackPlugin([
 var config = [
     {
         name: 'server',
-        entry: SERVER_DIR + '/server_promises.js',
+        entry: SERVER_DIR + '/index.js',
         target: 'node',
         node: {
             __filename: false,
