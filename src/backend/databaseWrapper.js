@@ -9,7 +9,7 @@ export default class DatabaseWrapper {
         this.db = database;
     }
 
-    getTagList(search) {
+    getTagList(search="") {
         return this.db.all(`SELECT t.id, t.text, COUNT(etm.tag_id) AS count
                             FROM tags AS t
                             LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
@@ -80,7 +80,7 @@ export default class DatabaseWrapper {
     */
 
 
-    getEntryList(search, complete = false) {
+    getEntryList(search="", complete = false) {
         return this.db.all(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_id, ';') AS tagIDs
                 FROM entry_tag_view
                 WHERE entry_text LIKE ?
@@ -113,7 +113,7 @@ export default class DatabaseWrapper {
     }
 
     addEntry(entry) {
-        if (entry.id === null) {
+        if (entry.id !== null) {
             return Promise.reject(`can't create entry with id ${entry.id}`);
         }
 
@@ -129,7 +129,7 @@ export default class DatabaseWrapper {
       If Entry.id is null a new Entry will be created.
       Any new Tags in Entry.tags will also be created.
     */
-    async updateEntry(entry) {
+    async updateOrAddEntry(entry) {
         await this.db.run('BEGIN');
 
         try {

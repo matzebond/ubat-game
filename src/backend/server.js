@@ -91,7 +91,7 @@ app.post("/entries", async (req, res) => {
         return;
     }
 
-    const result = await wrapper.updateEntry(entry);
+    const result = await wrapper.updateOrAddEntry(entry);
 
     if (result.entry === undefined) {
         res.status(result.status).send(result.msg).end();
@@ -115,6 +115,8 @@ app.put("/entries/:id", async (req, res) => {
         res.status(400).send(err).end();
         return;
     }
+
+    const result = await wrapper.updateOrAddEntry(entry);
 
     if (result.entry === undefined) {
         res.status(result.status).send(result.msg).end();
