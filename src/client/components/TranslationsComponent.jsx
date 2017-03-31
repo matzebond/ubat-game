@@ -64,12 +64,9 @@ export default class Translations extends React.Component {
         const { translations, curText, curLang } = this.state;
         const { langs } = this.props;
 
-        console.log("render");
-
         const translationRows = translations.map(this.translationRow);
 
         const translatedLangs = translations.map(({lang}) => lang);
-
 
         return (
             <div>

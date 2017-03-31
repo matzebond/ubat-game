@@ -16,7 +16,7 @@ export default class AddEntry extends React.Component {
             <div>
               <h3>Add entry</h3>
               <EntryCompoment
-                onSubmit={EntryStore.sendEntry}
+                onSubmit={EntryStore.addEntry}
                 onAbort={function (context) {
                     return true; // clear on abort
                 }}

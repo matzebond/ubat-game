@@ -33,8 +33,8 @@ class EntryStore {
     }
 
     constructor() {
-        this.sendEntry = this.sendEntry.bind(this);
         this.requestTags = this.requestTags.bind(this);
+        this.addEntry = this.addEntry.bind(this);
         this.deleteEntry = this.deleteEntry.bind(this);
         this.updateEntry = this.updateEntry.bind(this);
 
@@ -47,7 +47,7 @@ class EntryStore {
     }
 
     requestTags() {
-        axios.get("/tag/list")
+        axios.get("/tags")
             .then(res => {
                 this.tags.replace(res.data.map(e => new Tag(e)));
                 this.lastTagRequest = new Date();
@@ -59,7 +59,7 @@ class EntryStore {
     }
 
     requestEntries() {
-        axios.get("/entry/list")
+        axios.get("/entries")
             .then(res => {
                 this.entries.replace(res.data.map(e => new Entry(e)));
                 this.lastEntryRequest = new Date();
@@ -70,9 +70,9 @@ class EntryStore {
             });
     }
 
-    sendEntry(entry, callback = () => {}) {
-        console.log(entry);
-        axios.post("/entry/add", entry)
+    addEntry(entry, callback = () => {}) {
+        console.log(JSON.stringify(entry));
+        axios.post("/entries", entry)
             .then( res => {
                 if (res.status !== 200) {
                     throw res.data;
@@ -92,7 +92,7 @@ class EntryStore {
     }
 
     updateEntry(entry, callback = () => {}) {
-        axios.post("/entry/update", entry)
+        axios.put(`/entries/${entry.id}`, entry)
             .then( res => {
                 if (res.status !== 200) {
                     throw res.data;
@@ -119,7 +119,7 @@ class EntryStore {
     }
 
     deleteEntry(entryID, entryIndex) {
-        axios.delete("/entry/delete/" + entryID)
+        axios.delete(`/entries/${entryID}`)
             .then( res => {
                 if (res.status !== 200) {
                     console.log(res);
