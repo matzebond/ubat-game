@@ -4,6 +4,7 @@ import TagsInput from "react-tagsinput";
 import Autosuggest from "react-autosuggest";
 
 import EntryStore from "../EntryStore.js";
+import Tag from "../../data/Tag.js";
 
 
 @observer
@@ -27,16 +28,36 @@ export default class TagsComponent extends React.Component {
             suggestions: []
         };
 
-        this.handleTagChange = this.handleTagChange.bind(this);
-
-        this.autocompleteRenderInput = this.autocompleteRenderInput.bind(this);
+        this.addTag = this.addTag.bind(this);
+        this.removeTag = this.removeTag.bind(this);
+        this.renderAutocompleteInput = this.renderAutocompleteInput.bind(this);
+        this.renderTags = this.renderTags.bind(this);
         this.onSuggestionsClearRequested = this.onSuggestionsClearRequested.bind(this);
         this.onSuggestionsFetchRequested = this.onSuggestionsFetchRequested.bind(this);
         this.getSuggestions = this.getSuggestions.bind(this);
+        this.handleTextChange = this.handleTextChange.bind(this);
+        this.handleTextKeyDown = this.handleTextKeyDown.bind(this);
     }
 
-    addTag(text) {
+    addTag(newTag) {
+        this.setState( ({ tags }) => {
+            if (!tags.map(tag => tag.text).includes(newTag.text)) {
+                tags.push(newTag);
+                this.props.onTagsChange(tags);
+                return {tags, text: ""};
+            }
+            else {
+                return {text: ""};
+            }
+        });
+    }
 
+    removeTag(rTag) {
+        this.setState(({ tags })=> {
+            tags = tags.filter(tag => tag!= rTag);
+            this.props.onTagsChange(tags);
+            return { tags };
+        });
     }
 
     getSuggestions (value) {
@@ -44,9 +65,9 @@ export default class TagsComponent extends React.Component {
         const inputLength = inputValue.length;
 
         return inputLength === 0 ? [] :
-            EntryStore.tags.filter(tag =>
-                                         tag.text.toLowerCase().slice(0, inputLength) === inputValue
-                                        );
+            EntryStore.tags.filter(tag => {
+                return tag.text.toLowerCase().slice(0, inputLength) === inputValue;
+            });
     };
 
     // Autosuggest will call this function every time you need to update suggestions.
@@ -60,45 +81,39 @@ export default class TagsComponent extends React.Component {
         this.setState({suggestions: []});
     };
 
-
-    handleTagChange(tags) {
-        this.props.onTagsChange(tags);
-        this.setState({tags});
+    handleTextChange(e, {newValue, method, ...rest}) {
+        // console.log(e, newValue, method, ...rest);
+        // if (method === 'enter') {
+        // } else {
+        this.setState({text : newValue});
+        // props.onChange(e);
+        // }
     }
 
-    autocompleteRenderInput({addTag, ...props}) {
+    handleTextKeyDown(event) {
+        // console.log(event);
+        const { text } = this.state;
+
+        // allows to add new tags with Enter
+        if (event.key === 'Enter' && text.length !== 0) {
+            this.addTag(new Tag({text}));
+        }
+        // also add them with Tab
+        else if (event.key === 'Tab' && text.length !== 0) {
+            this.addTag(new Tag({text}));
+            event.preventDefault();
+        }
+    }
+
+    renderAutocompleteInput() {
         const { suggestions, text } = this.state;
 
-        const onChange = (e, {newValue, method, ...rest}) => {
-            // console.log(e, newValue, method, ...rest);
-            // if (method === 'enter') {
-            // } else {
-                this.setState({text : newValue});
-                // props.onChange(e);
-            // }
-        };
-
-        const onKeyDown = (event) => {
-            // console.log(event);
-
-            // allows to add new tags with Enter
-            if (event.key === 'Enter') {
-                addTag(text);
-                this.setState({text: ""});
-            }
-            // also add them with Tab
-            else if (event.key === 'Tab' && text.length !== 0) {
-                addTag(text);
-                this.setState({text: ""});
-                event.preventDefault();
-            }
-        };
 
         const inputProps = {
             placeholder: 'Add a tag',
             value: text,
-            onChange,
-            onKeyDown
+            onChange: this.handleTextChange,
+            onKeyDown: this.handleTextKeyDown
         };
 
         return (
@@ -109,37 +124,41 @@ export default class TagsComponent extends React.Component {
               inputProps={inputProps}
               autoHighligth={true}
               onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-              onSuggestionSelected={(e, {suggestion, suggestionValue}) => {
-                  console.log(e, suggestion, suggestionValue);
-                  addTag(suggestionValue);
-                  this.setState({text: ""});
-              }}
+              onSuggestionSelected={(e, {suggestion}) => {this.addTag(suggestion);}}
               onSuggestionsClearRequested={this.onSuggestionsClearRequested}
               />
         );
-        // inputProps={{...props, onChange}}
         // alwaysRenderSuggestions={true}
+    }
+
+    renderTags() {
+        const { tags } = this.state;
+
+        const tagSpans = tags.map(tag => {
+            return (
+                <span className="react-tagsinput-tag">
+                  {tag.text}
+                  {tag.id == null? "**new**":""}
+                  <a className="react-tagsinput-remove" onClick={this.removeTag.bind(this, tag)}></a>
+                </span>
+            );
+        });
+
+        return (
+            <div>
+              {tags.length > 0 ? tagSpans : "add at least one tag"}
+            </div>
+        );
     }
 
     render() {
 
         return (
-            <TagsInput renderInput={this.autocompleteRenderInput}
-                       value={this.state.tags}
-                       onChange={this.handleTagChange}
-                       renderLayout={tagRenderLayout}
-                       onlyUnique/>
+            <div>
+              {this.renderTags()}
+              {this.renderAutocompleteInput()}
+            </div>
         );
     }
 }
 
-const tagRenderLayout = function (tagComponents, inputComponent) {
-    return (
-        <div>
-          <div>
-            {tagComponents.length !== 0 ? tagComponents : <p>an entry needs at least one tag</p>}
-          </div>
-          {inputComponent}
-        </div>
-    );
-};

@@ -1,6 +1,5 @@
 import React from "react";
 import { Button, Alert } from "react-bootstrap";
-import TagsInput from 'react-tagsinput';
 import Autosuggest from 'react-autosuggest';
 
 import ResponseAlert from "./ResponseAlert";
@@ -34,7 +33,7 @@ export default class EntryCompoment extends React.Component {
 
         this.state = {
             text: this.props.entry.text,
-            tags: this.props.entry.tags.slice(0),
+            tags: this.props.entry.tags,
             suggestions: [],
             send: false,
             gotSubmitErr: false
@@ -64,12 +63,13 @@ export default class EntryCompoment extends React.Component {
     }
 
     handleTagsChange(tags) {
-        this.tags = tags;
+        console.log(JSON.stringify(tags));
+        this.setState({ tags });
     }
 
     handleSubmit() {
         const text = this.state.text;
-        const tags = this.tags;
+        const tags = this.state.tags;
         const id = this.props.entry.id;
 
         this.props.onSubmit(new Entry({id, text, tags}), this.submitCallback);
@@ -107,13 +107,14 @@ export default class EntryCompoment extends React.Component {
             <div className="entry-container">
                 <p>Entry text: </p>
 
-                <input className="form-control input-lg" value={text}
-                       onChange={this.handleEntryTextChange} placeholder={'Enter phrase'}/>
+                <input className="form-control input-lg"
+                       value={text}
+                       placeholder={'Enter phrase'}
+                       onChange={this.handleEntryTextChange} />
 
                 <TranslationsComponent />
 
-                <TagsComponent tags={this.props.tags}
-                               onTagsChange={this.handleTagsChange}/>
+                <TagsComponent tags={tags} onTagsChange={this.handleTagsChange}/>
 
                 <div>
                     <Button bsStyle="success" block onClick={this.handleSubmit}>Save</Button>
