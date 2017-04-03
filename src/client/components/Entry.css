@@ -115,3 +115,7 @@
 .react-autosuggest__suggestion--highlighted {
   background-color: #ddd;
 }
+
+.translation-lang {
+  display: inline;
+}

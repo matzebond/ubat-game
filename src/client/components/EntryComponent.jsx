@@ -41,6 +41,7 @@ export default class EntryCompoment extends React.Component {
 
         this.handleEntryTextChange = this.handleEntryTextChange.bind(this);
         this.handleTagsChange = this.handleTagsChange.bind(this);
+        this.handleTranslationsChange = this.handleTranslationsChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handleAbort = this.handleAbort.bind(this);
         this.submitCallback = this.submitCallback.bind(this);
@@ -65,6 +66,10 @@ export default class EntryCompoment extends React.Component {
     handleTagsChange(tags) {
         console.log(JSON.stringify(tags));
         this.setState({ tags });
+    }
+
+    handleTranslationsChange(translations) {
+        this.translations = translations;
     }
 
     handleSubmit() {
@@ -112,7 +117,7 @@ export default class EntryCompoment extends React.Component {
                        placeholder={'Enter phrase'}
                        onChange={this.handleEntryTextChange} />
 
-                <TranslationsComponent />
+                <TranslationsComponent onTranslationChange={this.handleTranslationsChange}/>
 
                 <TagsComponent tags={tags} onTagsChange={this.handleTagsChange}/>
 

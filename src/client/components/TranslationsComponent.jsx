@@ -19,7 +19,7 @@ export default class Translations extends React.Component {
         this.state = {
             curText: "",
             curLang: "",
-            translations: [new Translation({text:"dummyTrans", lang:"German"})]
+            translations: []
         };
 
         this.addTranslation = this.addTranslation.bind(this);
@@ -28,18 +28,14 @@ export default class Translations extends React.Component {
         this.translationRow = this.translationRow.bind(this);
     }
 
-    handleTextChange(e) {
-        this.setState({curText: e.target.value});
-    }
-
     addTranslation() {
         this.setState(({ translations, curText, curLang }) => {
             const newTranslation = new Translation({text: curText, lang: curLang});
-            const newTranslations = translations.push(newTranslation);
+            translations.push(newTranslation);
 
-            this.props.onTranslationChange(newTranslations);
+            this.props.onTranslationChange(translations);
 
-            return {tranlations: newTranslations, curText: "", curLang: ""};
+            return {translations, curText: "", curLang: ""};
         });
     }
 
@@ -50,12 +46,21 @@ export default class Translations extends React.Component {
         });
     }
 
+    handleTextChange(e) {
+        this.setState({ curText: e.target.value });
+    }
+
+    handleLangChange(e) {
+        console.log(e);
+        this.setState({ curLang: e.target.value });
+    }
+
     translationRow({text, lang}, index) {
         return (
             <div>
-              <p>{lang}</p>
-              <input value={text} />
-              <Button bsStyle="danger" onClick={this.removeTranslation.bind(index)}>x</Button>
+              <p className="translation-lang">{lang}</p>
+              <input className="input" value={text} />
+              <Button bsStyle="danger" onClick={this.removeTranslation.bind(this, index)}>x</Button>
             </div>
         );
     }
@@ -66,15 +71,19 @@ export default class Translations extends React.Component {
 
         const translationRows = translations.map(this.translationRow);
 
-        const translatedLangs = translations.map(({lang}) => lang);
+        const translatedLangs = translations.map(trans => trans.lang);
+        const remainLangs = langs.filter(lang => !translatedLangs.includes(lang));
+        const langOptions = remainLangs.map(lang => <option value={lang}>{lang}</option>);
 
         return (
             <div>
               <span>Translations:</span>
               {translationRows}
               <div>
-                <p>{curLang}</p>
-                <input className="form-control input"
+                <select onChange={this.handleLangChange.bind(this)}>
+                  {langOptions}
+                </select>
+                <input className="translation-input input"
                   value={curText}
                   onChange={this.handleTextChange}
                   placeholder="Enter translation"
