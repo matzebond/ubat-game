@@ -1,5 +1,8 @@
 import React from "react";
 import { Button } from "react-bootstrap";
+import Select from 'react-select';
+
+import 'react-select/dist/react-select.css';
 
 import Translation from "../../data/Translation.js";
 
@@ -18,13 +21,14 @@ export default class Translations extends React.Component {
 
         this.state = {
             curText: "",
-            curLang: "",
+            curLang: props.langs[0],
             translations: []
         };
 
         this.addTranslation = this.addTranslation.bind(this);
         this.removeTranslation = this.removeTranslation.bind(this);
         this.handleTextChange = this.handleTextChange.bind(this);
+        this.handleLangChange = this.handleLangChange.bind(this);
         this.translationRow = this.translationRow.bind(this);
     }
 
@@ -50,16 +54,15 @@ export default class Translations extends React.Component {
         this.setState({ curText: e.target.value });
     }
 
-    handleLangChange(e) {
-        console.log(e);
-        this.setState({ curLang: e.target.value });
+    handleLangChange(lang) {
+        this.setState({ curLang: lang.value });
     }
 
     translationRow({text, lang}, index) {
         return (
             <div>
-              <p className="translation-lang">{lang}</p>
-              <input className="input" value={text} />
+              <p className="translations-lang">{lang}</p>
+              <input className="translations-input form-control input" value={text} />
               <Button bsStyle="danger" onClick={this.removeTranslation.bind(this, index)}>x</Button>
             </div>
         );
@@ -73,17 +76,23 @@ export default class Translations extends React.Component {
 
         const translatedLangs = translations.map(trans => trans.lang);
         const remainLangs = langs.filter(lang => !translatedLangs.includes(lang));
-        const langOptions = remainLangs.map(lang => <option value={lang}>{lang}</option>);
+
+        const langOptions = langs.map(lang => {
+            return {value: lang, label: lang, disabled: translatedLangs.includes(lang)};
+        });
 
         return (
             <div>
               <span>Translations:</span>
               {translationRows}
               <div>
-                <select onChange={this.handleLangChange.bind(this)}>
-                  {langOptions}
-                </select>
-                <input className="translation-input input"
+                <Select className="translation-lang-select"
+                  value={curLang}
+                  options={langOptions}
+                  onChange={this.handleLangChange}
+                  clearable={false}
+                  />
+                <input className="translation-input form-control input"
                   value={curText}
                   onChange={this.handleTextChange}
                   placeholder="Enter translation"
