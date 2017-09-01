@@ -132,7 +132,8 @@ app.delete("/entries/:id", async (req, res) => {
     const entryID = req.params.id;
     console.log("delete " + entryID);
     try {
-        let result = await db.run(`DELETE FROM entries WHERE id = ?;`, entryID);
+        // let result = await db.run(`DELETE FROM entries WHERE id = ?;`, entryID);
+        let result = await db.run(`UPDATE entries SET deleted=1 WHERE id = ?;`, entryID);
 
         if (!result.changes) {
             console.log(`couldn't delete entry with id ${entryID}`);
@@ -140,7 +141,7 @@ app.delete("/entries/:id", async (req, res) => {
             return;
         }
 
-        await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entryID);
+        // await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entryID);
         res.status(200).end();
     }
     catch (err) {

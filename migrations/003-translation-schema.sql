@@ -30,14 +30,14 @@ CREATE VIEW entry_translation_view AS
        SELECT e.id AS entry_id, e.text AS entry_text, l.id AS lang_id, l.name AS lang_name, etl.trans_text
        FROM entries AS e
        LEFT OUTER JOIN entry_translations AS etl ON e.id = etl.entry_id
-       LEFt OUTER JOIN languages AS l ON etl.lang_id = l.id
+       LEFT OUTER JOIN languages AS l ON etl.lang_id = l.id
 ;
 
 CREATE VIEW tag_translation_view AS
        SELECT t.id AS tag_id, t.text AS tag_text, l.id AS lang_id, l.name AS lang_name, ttl.trans_text
        FROM tags AS t
        LEFT OUTER JOIN tag_translations AS ttl ON t.id = ttl.tag_id
-       LEFt OUTER JOIN languages AS l ON ttl.lang_id = l.id
+       LEFT OUTER JOIN languages AS l ON ttl.lang_id = l.id
 ;
 
 
