@@ -9,40 +9,55 @@ export default class DatabaseWrapper {
         this.db = database;
     }
 
-    getTagList(search="") {
-        return this.db.all(`SELECT t.id, t.text, COUNT(etm.tag_id) AS count
-                            FROM tags AS t
-                            LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
-                            WHERE t.text LIKE ?
-                            GROUP BY t.id
-                            ORDER BY t.id`,
-                           '%' + search + '%')
-            .then( rows => {
-                const tags = rows.map(row => new Tag(row));
-                return tags;
-            });
+    async getInfo() {
+        const tagCount = await this.db.get(`SELECT COUNT(*) AS count FROM tags`).then(row => row.count);
+        const entryCount = await this.db.get(`SELECT COUNT(*) AS count FROM entries`).then(row => row.count);
+        const langs = await this.db.all(`SELECT * FROM languages`);
+        return {tagCount, entryCount, langs};
     }
 
-    getTagById(id) {
+    async getTagList(search="", lang) {
+      const rows = await this.db.all(
+        `SELECT t.id,
+          COUNT(etm.tag_id) AS count,
+          CASE WHEN etv.trans_text NOT NULL THEN etv.trans_text
+          ELSE t.text END text
+          FROM tags AS t
+          LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
+          LEFT OUTER JOIN tag_translation_view AS etv ON (t.id = etv.tag_id AND etv.lang_abbr = ?)
+          WHERE t.text LIKE ?
+          GROUP BY t.id
+          ORDER BY t.id`,
+          lang, '%' + search + '%');
+        const tags = rows.map(row => new Tag(row));
+        return tags;
+    }
+
+    async getTagById(id, lang) {
         if (id === undefined) {
             return Promise.reject('id undefined');
         }
-        return this.db.get(`SELECT t.id, t.text, COUNT(etm.tag_id) AS count
-                            FROM tags AS t
-                            LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
-                            WHERE t.id = ?
-                            GROUP BY t.id
-                            ORDER BY t.id`,
-                           id)
-            .then( row => {
-                if (!row) return null;
-                return new Tag(row);
-            });
+        const row = await this.db.get(
+          `SELECT t.id,
+            COUNT(etm.tag_id) AS count,
+            CASE WHEN etv.trans_text NOT NULL THEN etv.trans_text
+            ELSE t.text END text
+            FROM tags AS t
+            LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
+            LEFT OUTER JOIN tag_translation_view AS etv ON (t.id = etv.tag_id AND etv.lang_abbr = ?)
+            WHERE t.id = ?
+            GROUP BY t.id
+            ORDER BY t.id`,
+          lang, id);
+      if (!row) {
+        return null;
+      }
+      return new Tag(row);
     }
 
     addTag(tag) {
         if (tag.id !== null) {
-            return Promise.reject(`can't create tag with id ${tag.id}`);
+            return Promise.reject(`can't create tag which already has an id (${tag.id})`);
         }
 
         return this.db.run(`INSERT INTO tags VALUES (NULL, ?)`, tag.text)
@@ -80,12 +95,17 @@ export default class DatabaseWrapper {
     */
 
 
-    getEntryList(search="", complete = false) {
-        return this.db.all(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_id, ';') AS tagIDs
-                FROM entry_tag_view
-                WHERE entry_text LIKE ?
-                GROUP BY entry_id`,
-               '%' + search + '%')
+    getEntryList(search="", complete = false, lang) {
+      return this.db.all(`SELECT et.entry_id AS id,
+                            CASE WHEN etl.trans_text NOT NULL THEN etl.trans_text
+                              ELSE et.entry_text END text,
+                            GROUP_CONCAT(et.tag_id, ';') AS tagIDs
+                          FROM entry_tag_view AS et
+                          LEFT OUTER JOIN entry_translation_view AS etl
+                            ON (et.entry_id = etl.entry_id AND etl.lang_abbr = ?)
+                          WHERE et.entry_text LIKE ?
+                          GROUP BY et.entry_id`,
+                         lang, '%' + search + '%')
             .then(async (rows) => {
                 const entries = rows.map(row => Entry.fromDB(row));
                 if (complete) {
@@ -99,22 +119,27 @@ export default class DatabaseWrapper {
             });
     }
 
-    getEntryByID(id) {
-        return this.db.get(`SELECT entry_id AS id, entry_text AS text, GROUP_CONCAT(tag_id, ';') AS tagIDs
-            FROM entry_tag_view
-            WHERE entry_id = ?
-            GROUP BY entry_id`, id)
-            .then(row => {
-                if (!row) {
-                    return null;
-                }
-                return Entry.fromDB(row);
-            });
+    async getEntryByID(id, lang) {
+      const res = await this.db.get(
+        `SELECT et.entry_id AS id,
+            CASE WHEN etl.trans_text NOT NULL THEN etl.trans_text
+              ELSE et.entry_text END text,
+            GROUP_CONCAT(et.tag_id, ';') AS tagIDs
+          FROM entry_tag_view AS et
+          LEFT OUTER JOIN entry_translation_view AS etl
+            ON (et.entry_id = etl.entry_id AND etl.lang_abbr = ?)
+          WHERE et.entry_id = ?
+          GROUP BY et.entry_id`,
+        lang, id);
+      if (!row) {
+          return null;
+      }
+      return Entry.fromDB(row);
     }
 
     addEntry(entry) {
         if (entry.id !== null) {
-            return Promise.reject(`can't create entry with id ${entry.id}`);
+            return Promise.reject(`can't create entry which already has an id (${entry.id})`);
         }
 
         return this.db.run(`INSERT INTO entries VALUES (NULL, ?)`, entry.text)

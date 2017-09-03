@@ -27,20 +27,23 @@ CREATE TABLE tag_translations (
 );
 
 CREATE VIEW entry_translation_view AS
-       SELECT e.id AS entry_id, e.text AS entry_text, l.id AS lang_id, l.name AS lang_name, etl.trans_text
+       SELECT e.id AS entry_id, e.text AS entry_text, l.id AS lang_id,
+              l.name AS lang_name, l.abbr AS lang_abbr, etl.trans_text
        FROM entries AS e
        LEFT OUTER JOIN entry_translations AS etl ON e.id = etl.entry_id
        LEFT OUTER JOIN languages AS l ON etl.lang_id = l.id
 ;
 
 CREATE VIEW tag_translation_view AS
-       SELECT t.id AS tag_id, t.text AS tag_text, l.id AS lang_id, l.name AS lang_name, ttl.trans_text
+       SELECT t.id AS tag_id, t.text AS tag_text, l.id AS lang_id,
+              l.name AS lang_name, l.abbr AS lang_abbr, ttl.trans_text
        FROM tags AS t
        LEFT OUTER JOIN tag_translations AS ttl ON t.id = ttl.tag_id
        LEFT OUTER JOIN languages AS l ON ttl.lang_id = l.id
 ;
 
 
+INSERT INTO languages VALUES(0, "english", "en");
 INSERT INTO languages VALUES(1, "Deutsch", "de");
 INSERT INTO languages VALUES(2, "française", "fr");
 INSERT INTO languages VALUES(3, "español", "es");

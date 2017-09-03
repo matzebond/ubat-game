@@ -23,10 +23,22 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 app.use(allowCrossDomain);
 
 
+app.get("/info", (req, res) => {
+    wrapper.getInfo()
+        .then(info => {
+            res.status(200).json(info);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).end();
+        });
+});
+
 
 app.get("/tags", (req, res) => {
-    const tagText = req.query.q;
-    wrapper.getTagList(tagText)
+    const query = req.query.q;
+    const lang = req.query.lang;
+    wrapper.getTagList(query, lang)
         .then(tags => {
             res.status(200).json(tags).end();
         })
@@ -38,7 +50,8 @@ app.get("/tags", (req, res) => {
 
 app.get("/tags/:id", (req, res) => {
     const tagID = req.params.id;
-    wrapper.getTagById(tagID)
+    const lang = req.query.lang;
+    wrapper.getTagById(tagID, lang)
         .then(tag => {
             if (!tag) {
                 res.status(404).send(`no tag with id ${tagID}`).end();
@@ -152,7 +165,8 @@ app.delete("/entries/:id", async (req, res) => {
 
 app.get("/entries", (req, res) => {
     const entryText = req.query.q;
-    wrapper.getEntryList(entryText)
+    const lang = req.query.lang;
+    wrapper.getEntryList(entryText, lang)
         .then(entries => {
             res.json(entries).end();
         })
@@ -164,7 +178,8 @@ app.get("/entries", (req, res) => {
 
 app.get("/entries/:id", (req, res) => {
     const entryID = req.params.id;
-    wrapper.getEntryByID(entryID)
+    const lang = req.query.lang;
+    wrapper.getEntryByID(entryID, lang)
         .then(entry => {
             if (!entry) {
                 res.status(404).send(`no entry with id ${entryID}`).end();
