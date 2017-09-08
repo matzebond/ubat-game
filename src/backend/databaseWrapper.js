@@ -212,4 +212,16 @@ export default class DatabaseWrapper {
             return {status: 500};
         }
     }
+
+  async deleteEntry(id) {
+    const result = await db.run(`UPDATE entries SET deleted=1 WHERE id = ?;`, id);
+
+    if (!result.changes) {
+      return Promise.reject(`couldn't delete entry with id ${id}`);
+    }
+
+    // await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entryID);
+
+    return null;
+  }
 }

@@ -67,7 +67,7 @@ app.get("/tags/:id", (req, res) => {
 
 
 
-const parseEntryBody = function (body) {
+const parseEntryBody = (body) => {
     let entry;
 
     try {
@@ -141,26 +141,17 @@ app.put("/entries/:id", async (req, res) => {
     res.status(200).json({entry: result.entry, tags}).end();
 });
 
-app.delete("/entries/:id", async (req, res) => {
+app.delete("/entries/:id", (req, res) => {
     const entryID = req.params.id;
     console.log("delete " + entryID);
-    try {
-        // let result = await db.run(`DELETE FROM entries WHERE id = ?;`, entryID);
-        let result = await db.run(`UPDATE entries SET deleted=1 WHERE id = ?;`, entryID);
-
-        if (!result.changes) {
-            console.log(`couldn't delete entry with id ${entryID}`);
-            res.status(204).send(`couldn't delete entry with id ${entryID}`).end();
-            return;
-        }
-
-        // await db.run(`DELETE FROM entry_tag_map WHERE entry_id = ?`, entryID);
-        res.status(200).end();
-    }
-    catch (err) {
-        console.log(err);
-        res.status(500).end();
-    }
+    wrapper.deleteEntry(entryID)
+        .then(() => {
+          res.status(200).send(`successfully deleted entry ${entryID}`);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).end();
+        });
 });
 
 app.get("/entries", (req, res) => {
@@ -200,7 +191,7 @@ export default function start_server(db, port) {
 
     let server = app.listen(port, (err) => {
         if (err) {
-            console.log('something bad happened', err);
+            console.log(`couldn't start server at ${port}`, err);
             return;
         }
         let host = server.address().address;
