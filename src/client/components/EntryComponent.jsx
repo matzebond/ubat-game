@@ -1,6 +1,10 @@
 import React from "react";
+import { observer } from "mobx-react";
 import { Button, Alert } from "react-bootstrap";
 import Autosuggest from 'react-autosuggest';
+
+import Entry from "../../data/Entry.js";
+import EntryStore from "../EntryStore.js";
 
 import ResponseAlert from "./ResponseAlert";
 import TagsComponent from "./TagsComponent";
@@ -8,10 +12,8 @@ import TranslationsComponent from "./TranslationsComponent";
 
 import "./Entry.css";
 
-import Entry from "../../data/Entry.js";
 
-
-
+@observer
 export default class EntryCompoment extends React.Component {
 
     static propTyps = {
@@ -34,12 +36,12 @@ export default class EntryCompoment extends React.Component {
         this.state = {
             text: this.props.entry.text,
             tags: this.props.entry.tags,
-            suggestions: [],
+            translations: this.props.entry.translations,
             send: false,
             gotSubmitErr: false
         };
 
-        this.handleEntryTextChange = this.handleEntryTextChange.bind(this);
+        this.handleTextChange = this.handleTextChange.bind(this);
         this.handleTagsChange = this.handleTagsChange.bind(this);
         this.handleTranslationsChange = this.handleTranslationsChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -59,7 +61,7 @@ export default class EntryCompoment extends React.Component {
         });
     }
 
-    handleEntryTextChange(e) {
+    handleTextChange(e) {
         this.setState({text: e.target.value});
     }
 
@@ -69,15 +71,14 @@ export default class EntryCompoment extends React.Component {
     }
 
     handleTranslationsChange(translations) {
-        this.translations = translations;
+        this.setState({ translations })
     }
 
     handleSubmit() {
-        const text = this.state.text;
-        const tags = this.state.tags;
+        const { text, tags, translations } = this.state;
         const id = this.props.entry.id;
 
-        this.props.onSubmit(new Entry({id, text, tags}), this.submitCallback);
+        this.props.onSubmit(new Entry({id, text, tags, trans: translations}), this.submitCallback);
 
         this.setState({send: false, lastText: text});
     }
@@ -91,7 +92,6 @@ export default class EntryCompoment extends React.Component {
 
     submitCallback(err) {
         if(err) {
-            console.log(err);
             this.setState({send: true, gotSubmitErr: true, errorMsg: typeof err.data === 'string' ? err.data : ""});
         }
         else {
@@ -104,7 +104,6 @@ export default class EntryCompoment extends React.Component {
         }
     }
 
-
     render() {
         const { tags, text, send, gotSubmitErr, errorMsg, lastText } = this.state;
 
@@ -115,9 +114,12 @@ export default class EntryCompoment extends React.Component {
                 <input className="form-control input-lg"
                        value={text}
                        placeholder={'Enter phrase'}
-                       onChange={this.handleEntryTextChange} />
+                       onChange={this.handleTextChange} />
 
-                <TranslationsComponent onTranslationChange={this.handleTranslationsChange}/>
+                <span>Translations:</span>
+                <TranslationsComponent
+                    langs={EntryStore.langs.peek()}
+                    onTranslationChange={this.handleTranslationsChange}/>
 
                 <TagsComponent tags={tags} onTagsChange={this.handleTagsChange}/>
 

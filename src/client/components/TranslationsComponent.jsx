@@ -5,15 +5,16 @@ import Select from 'react-select';
 import 'react-select/dist/react-select.css';
 
 import Translation from "../../data/Translation.js";
+import Language from "../../data/Language.js";
 
 export default class Translations extends React.Component {
     static propsTyps = {
-        langs: React.PropTypes.arrayOf(React.PropTypes.string),
+        langs: React.PropTypes.arrayOf(Language),
         onTranslationChange: React.PropTypes.func
     };
 
     static defaultProps = {
-        langs: [ "German", "French", "Spanish", "Russian", "Ukrainian", "Turkish" ]
+        langs: [ new Language({abbr:"en", name:"English"})]
     };
 
     constructor(props) {
@@ -21,8 +22,8 @@ export default class Translations extends React.Component {
 
         this.state = {
             curText: "",
-            curLang: props.langs[0],
-            translations: []
+            curLang: props.langs[0].abbr,
+            translations: [],
         };
 
         this.addTranslation = this.addTranslation.bind(this);
@@ -34,12 +35,15 @@ export default class Translations extends React.Component {
 
     addTranslation() {
         this.setState(({ translations, curText, curLang }) => {
-            const newTranslation = new Translation({text: curText, lang: curLang});
+            const newTranslation = new Translation({trans: curText, abbr: curLang});
             translations.push(newTranslation);
 
             this.props.onTranslationChange(translations);
 
-            return {translations, curText: "", curLang: ""};
+            const translatedLangs = translations.map(trans => trans.abbr);
+            const nextLang = this.props.langs.find( l => !translatedLangs.includes(l.abbr) ).abbr;
+
+            return {translations, curText: "", curLang: nextLang};
         });
     }
 
@@ -58,11 +62,13 @@ export default class Translations extends React.Component {
         this.setState({ curLang: lang.value });
     }
 
-    translationRow({text, lang}, index) {
+    translationRow(translation, index) {
+        const { abbr, trans } = translation;
+        const lang = this.props.langs.find( l => l.abbr === abbr ).name;
         return (
             <div>
               <p className="translations-lang">{lang}</p>
-              <input className="translations-input form-control input" value={text} />
+              <input className="translations-input form-control input" value={trans} />
               <Button bsStyle="danger" onClick={this.removeTranslation.bind(this, index)}>x</Button>
             </div>
         );
@@ -74,16 +80,13 @@ export default class Translations extends React.Component {
 
         const translationRows = translations.map(this.translationRow);
 
-        const translatedLangs = translations.map(trans => trans.lang);
-        const remainLangs = langs.filter(lang => !translatedLangs.includes(lang));
-
+        const translatedLangs = translations.map(trans => trans.abbr);
         const langOptions = langs.map(lang => {
-            return {value: lang, label: lang, disabled: translatedLangs.includes(lang)};
+            return {value: lang.abbr, label: lang.name, disabled: translatedLangs.includes(lang.abbr)};
         });
 
         return (
             <div>
-              <span>Translations:</span>
               {translationRows}
               <div>
                 <Select className="translation-lang-select"

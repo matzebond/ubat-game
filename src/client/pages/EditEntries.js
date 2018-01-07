@@ -60,7 +60,6 @@ export default class EditEntries extends React.Component {
                   <Col md={12} xs={12}>
                         <EntryCompoment
                               entry={entry}
-                              allTags={EntryStore.tags}
                               onSubmit={EntryStore.updateEntry}
                               onAbort={() => { this.setState({active: null}); }}
                               clearOnSuccessCallback={false} />

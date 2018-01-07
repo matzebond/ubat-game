@@ -17,11 +17,9 @@ export default class AddEntry extends React.Component {
               <h3>Add entry</h3>
               <EntryCompoment
                 onSubmit={EntryStore.addEntry}
-                onAbort={function (context) {
-                    return true; // clear on abort
-                }}
+                onAbort={() => {return true;}}
                 clearOnSuccessCallback={true}
-                store={EntryStore} />
+              />
             </div>
         );
     }
