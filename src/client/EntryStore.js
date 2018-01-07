@@ -4,6 +4,7 @@ import axios from "axios";
 
 import Tag from "../data/Tag";
 import Entry from "../data/Entry";
+import Language from "../data/Language";
 
 
 const backendIp = process.env.UBAT_IP || "localhost";
@@ -14,8 +15,11 @@ axios.defaults.baseURL = backendAddr;
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 class EntryStore {
-    @observable entries = [new Entry ({id:1, text:"DUMMY_ENTRY", tags:["DUMMY_TAG"]})];
+    @observable info = {};
+    @observable langs = [new Language({name:"english", abbr:"en"})];
+    @observable curLang = "en";
     @observable tags = [new Tag({id: 1, text:"DUMMY_TAG", count: 1}) ];
+    @observable entries = [new Entry ({id:1, text:"DUMMY_ENTRY", tags:[1]})];
 
     @observable currentGameTag = this.tags[0];
 
@@ -33,11 +37,13 @@ class EntryStore {
     }
 
     constructor() {
+        this.getInfo = this.getInfo.bind(this);
         this.requestTags = this.requestTags.bind(this);
         this.addEntry = this.addEntry.bind(this);
         this.deleteEntry = this.deleteEntry.bind(this);
         this.updateEntry = this.updateEntry.bind(this);
 
+        this.getInfo();
         this.requestTags();
         this.requestEntries();
     }
@@ -46,11 +52,28 @@ class EntryStore {
         this.currentGameTag = tag;
     }
 
+    setCurrentLang(lang) {
+        this.curLang = lang;
+        this.requestTags();
+    }
+
+    getInfo() {
+        axios.get("/info")
+            .then(res => {
+                this.info = res.data;
+                this.langs.replace(res.data.langs.map(l => new Language(l)));
+                console.log("got info");
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
     requestTags() {
-        axios.get("/tags")
+        axios.get("/tags",
+                  {params: { lang: this.curLang }})
             .then(res => {
                 this.tags.replace(res.data.map(e => new Tag(e)));
-                this.lastTagRequest = new Date();
                 console.log("got tags");
             })
             .catch(err => {
@@ -59,7 +82,8 @@ class EntryStore {
     }
 
     requestEntries() {
-        axios.get("/entries")
+        axios.get("/entries",
+                  {params: { lang: this.curLang }})
             .then(res => {
                 this.entries.replace(res.data.map(e => new Entry(e)));
                 this.lastEntryRequest = new Date();
@@ -81,7 +105,6 @@ class EntryStore {
                 // replace tags with received tags
                 const tags = res.data.tags.map(e => new Tag(e));
                 this.tags.replace(tags);
-                this.lastTagRequest = new Date();
                 callback();
             })
             .catch(err => {
@@ -108,7 +131,6 @@ class EntryStore {
                 // replace tags with received tags
                 const tags = res.data.tags.map(e => new Tag(e));
                 this.tags.replace(tags);
-                this.lastTagRequest = new Date();
                 callback();
             })
             .catch(err => {
