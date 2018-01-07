@@ -1,6 +1,11 @@
+import {observable} from "mobx";
+
 export default class Translation {
-    constructor({text, lang}) {
-        this.text = text;
-        this.lang = lang;
+    @observable abbr;
+    @observable trans;
+
+    constructor({abbr, trans}) {
+        this.abbr = abbr;
+        this.trans = trans;
     }
 }

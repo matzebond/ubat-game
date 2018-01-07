@@ -20,11 +20,11 @@ export default class DatabaseWrapper {
       const rows = await this.db.all(
         `SELECT t.id,
           COUNT(etm.tag_id) AS count,
-          CASE WHEN etv.trans_text NOT NULL THEN etv.trans_text
+          CASE WHEN ttv.trans_text NOT NULL THEN ttv.trans_text
           ELSE t.text END text
           FROM tags AS t
           LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
-          LEFT OUTER JOIN tag_translation_view AS etv ON (t.id = etv.tag_id AND etv.lang_abbr = ?)
+          LEFT OUTER JOIN tag_translation_view AS ttv ON (t.id = ttv.tag_id AND ttv.lang_abbr = ?)
           WHERE t.text LIKE ?
           GROUP BY t.id
           ORDER BY t.id`,
@@ -33,18 +33,18 @@ export default class DatabaseWrapper {
         return tags;
     }
 
-    async getTagById(id, lang) {
+    async getTagTranlated(id, lang) {
         if (id === undefined) {
             return Promise.reject('id undefined');
         }
         const row = await this.db.get(
           `SELECT t.id,
             COUNT(etm.tag_id) AS count,
-            CASE WHEN etv.trans_text NOT NULL THEN etv.trans_text
+            CASE WHEN ttv.trans_text NOT NULL THEN ttv.trans_text
             ELSE t.text END text
             FROM tags AS t
             LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
-            LEFT OUTER JOIN tag_translation_view AS etv ON (t.id = etv.tag_id AND etv.lang_abbr = ?)
+            LEFT OUTER JOIN tag_translation_view AS ttv ON (t.id = ttv.tag_id AND ttv.lang_abbr = ?)
             WHERE t.id = ?
             GROUP BY t.id
             ORDER BY t.id`,
@@ -52,21 +52,43 @@ export default class DatabaseWrapper {
       if (!row) {
         return null;
       }
-      return new Tag(row);
+      return Tag.fromDB(row);
     }
 
-    addTag(tag) {
+    async getTagById(id) {
+        const res = await this.db.get(
+            `SELECT t.id,
+                COUNT(etm.tag_id) AS count,
+                t.text AS text
+            FROM tags AS t
+            LEFT OUTER JOIN entry_tag_map AS etm ON (t.id = etm.tag_id)
+            WHERE t.id = ?
+            GROUP BY t.id
+            ORDER BY t.id`, id);
+
+        const res_trans = await this.db.all(
+            `SELECT lang_abbr AS abbr, trans_text AS trans
+            FROM tag_translation_view
+            WHERE tag_id = ?`, id);
+
+        if (!res) {
+            return null;
+        }
+
+        res.trans = res_trans;
+
+        return Tag.fromDB(res);
+    }
+
+    async addTag(tag) {
         if (tag.id !== null) {
             return Promise.reject(`can't create tag which already has an id (${tag.id})`);
         }
 
-        return this.db.run(`INSERT INTO tags VALUES (NULL, ?)`, tag.text)
-            .then(({lastID}) => {
-                return tag.id = lastID;
-            })
-            .then(() => {
-                return this.getTagById(tag.id);
-            });
+        const res = await this.db.run(`INSERT INTO tags VALUES (NULL, ?)`, tag.text);
+        tag.id = res.lastID;
+
+        return this.getTagById(tag.id);
     }
 
     getTag(tag) {
@@ -95,46 +117,47 @@ export default class DatabaseWrapper {
     */
 
 
-    getEntryList(search="", complete = false, lang) {
-      return this.db.all(`SELECT et.entry_id AS id,
-                            CASE WHEN etl.trans_text NOT NULL THEN etl.trans_text
-                              ELSE et.entry_text END text,
-                            GROUP_CONCAT(et.tag_id, ';') AS tagIDs
-                          FROM entry_tag_view AS et
-                          LEFT OUTER JOIN entry_translation_view AS etl
-                            ON (et.entry_id = etl.entry_id AND etl.lang_abbr = ?)
-                          WHERE et.entry_text LIKE ?
-                          GROUP BY et.entry_id`,
-                         lang, '%' + search + '%')
-            .then(async (rows) => {
-                const entries = rows.map(row => Entry.fromDB(row));
-                if (complete) {
-                    for (const entry of entries) {
-                        for (let i = 0; i < entry.tags.length; i++) {
-                            entry.tags[i] = await this.getTagById(entry.tags[i].id);
-                        }
-                    }
-                }
-                return entries;
-            });
+    async getEntryList(search="", lang) {
+        const rows = await this.db.all(
+            `SELECT et.entry_id AS id,
+                CASE WHEN etl.trans_text NOT NULL THEN etl.trans_text
+                ELSE et.entry_text END text,
+                GROUP_CONCAT(et.tag_id, ';') AS tagIDs
+            FROM entry_tag_view AS et
+            LEFT OUTER JOIN entry_translation_view AS etl
+                ON (et.entry_id = etl.entry_id AND etl.lang_abbr = ?)
+            WHERE et.entry_text LIKE ?
+            GROUP BY et.entry_id`,
+            lang, '%' + search + '%');
+
+        const entries = rows.map(row => Entry.fromDB(row));
+
+        return entries;
     }
 
-    async getEntryByID(id, lang) {
-      const res = await this.db.get(
-        `SELECT et.entry_id AS id,
-            CASE WHEN etl.trans_text NOT NULL THEN etl.trans_text
-              ELSE et.entry_text END text,
-            GROUP_CONCAT(et.tag_id, ';') AS tagIDs
-          FROM entry_tag_view AS et
-          LEFT OUTER JOIN entry_translation_view AS etl
-            ON (et.entry_id = etl.entry_id AND etl.lang_abbr = ?)
-          WHERE et.entry_id = ?
-          GROUP BY et.entry_id`,
-        lang, id);
-      if (!row) {
-          return null;
-      }
-      return Entry.fromDB(row);
+    async getEntryByID(id) {
+        const res = await this.db.get(
+            `SELECT et.entry_id AS id,
+                    et.entry_text AS text,
+                    GROUP_CONCAT(et.tag_id, ';') AS tagIDs
+            FROM entry_tag_view AS et
+            LEFT OUTER JOIN entry_tag_view AS etv
+                ON (et.entry_id = etv.entry_id)
+            WHERE et.entry_id = ?
+            GROUP BY et.entry_id`, id);
+
+        const res_trans = await this.db.all(
+            `SELECT lang_abbr AS abbr, trans_text AS trans
+            FROM entry_translation_view
+            WHERE entry_id = ?`, id);
+
+        if (!res) {
+            return null;
+        }
+
+        res.trans = res_trans;
+
+        return Entry.fromDB(res);
     }
 
     addEntry(entry) {

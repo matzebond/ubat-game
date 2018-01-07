@@ -52,6 +52,7 @@ INSERT INTO languages VALUES(5, "русский язык", "ru");
 INSERT INTO languages VALUES(6, "日本語", "jp");
 INSERT INTO languages VALUES(7, "svenska", "sv");
 INSERT INTO languages VALUES(8, "українська мова", "uk");
+INSERT INTO languages VALUES(9, "Türkçe", "tr");
 
 ----------------------------------------------------------
 -- Down

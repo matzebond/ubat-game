@@ -34,7 +34,7 @@
     "react-select": "^1.0.0-rc.3",
     "react-tagsinput": "^3.15.1",
     "screenfull": "^3.1.0",
-    "sqlite": "^2.3.0",
+    "sqlite": "^2.9.0",
     "webpack": "^2.2.1"
   },
   "devDependencies": {
