@@ -1,6 +1,5 @@
 var webpack = require('webpack');
 var path = require('path');
-var fs = require('fs');
 
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
@@ -22,6 +21,7 @@ const copyPlug = new CopyWebpackPlugin([
 var config = [
     {
         name: 'backend',
+        mode: debug ? 'development' : 'production',
         entry: SRC_DIR + '/index.js',
         target: 'node',
         node: {
@@ -38,14 +38,23 @@ var config = [
             sqlite3: 'commonjs sqlite3'
         },
         module: {
-            loaders : [
+            rules: [
                 {
                     test: /\.jsx?$/,
                     exclude: /(node_modules|bower_components)/,
                     loader: 'babel-loader',
                     query: {
-                        presets: ["es2017-node7"],
-                        plugins: ['transform-decorators-legacy', 'transform-class-properties']
+                        presets: [
+                            ["@babel/env", {
+                                targets: {
+                                    node: "10"
+                                }
+                            }]
+                        ],
+                        plugins: [
+                            ["@babel/plugin-proposal-decorators", { "legacy": true}], //mobx
+                            ["@babel/plugin-proposal-class-properties", { "loose": true}], //mobx
+                        ]
                     }
                 }
             ]
@@ -53,10 +62,10 @@ var config = [
         plugins: debug ? [
             envPlug,
             copyPlug,
-            new webpack.BannerPlugin( {
-                banner: 'require("source-map-support").install();',
-                raw: true,
-                entryOnly: false }),
+            // new webpack.BannerPlugin( {
+            //     banner: 'require("source-map-support").install();',
+            //     raw: true,
+            //     entryOnly: false }),
         ]
         : [envPlug, copyPlug],
         devtool: debug ? 'sourcemap' : false

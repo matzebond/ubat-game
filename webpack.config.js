@@ -1,6 +1,5 @@
 var webpack = require('webpack');
 var path = require('path');
-var fs = require('fs');
 var execSync = require('child_process').execSync;
 
 var HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -41,6 +40,7 @@ const copyPlug = new CopyWebpackPlugin([
 
 var config = {
     name: 'client',
+    mode: debug ? 'development' : 'production',
     entry: APP_DIR + '/index.js',
     output: {
         path: DIST_DIR,
@@ -58,9 +58,21 @@ var config = {
                 exclude: /(node_modules)/,
                 loader: 'babel-loader',
                 query: {
-                    presets: ["react", "es2015", "stage-0"],
+                    presets: ["@babel/react",
+                              ["@babel/env",
+                              {
+                                  targets: {
+                                      edge: "17",
+                                      firefox: "60",
+                                      chrome: "67",
+                                      safari: "11.1",
+                                  },
+                                  useBuiltIns: "usage",
+                              }]
+                             ],
                     plugins: [
-                        'transform-decorators-legacy', 'transform-class-properties', // needed for mobX
+                        ["@babel/plugin-proposal-decorators", { "legacy": true}], //mobx
+                        ["@babel/plugin-proposal-class-properties", { "loose": true}], //mobx
                         ["transform-imports", {
                             "react-bootstrap": {
                                 "transform": "react-bootstrap/lib/${member}",
@@ -92,7 +104,6 @@ var config = {
         envPlug,
         copyPlug,
         new Visualizer(),
-        new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
         new webpack.LoaderOptionsPlugin({ minimize: true, debug: false }),
         new webpack.optimize.AggressiveMergingPlugin()//Merge chunks
     ],
@@ -101,7 +112,7 @@ var config = {
         contentBase: DIST_DIR,
         host: '0.0.0.0',
         port: 8080,
-        inline:true,
+        inline: true,
         historyApiFallback: true
     }
 };
