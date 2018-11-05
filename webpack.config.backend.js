@@ -8,10 +8,11 @@ var debug = process.env.NODE_ENV !== "production";
 var SRC_DIR = path.resolve(__dirname, 'src/backend');
 var BUILD_DIR = path.resolve(__dirname, 'build');
 
+// the default value is taken when the environment variable is not set
 const envPlug = new webpack.EnvironmentPlugin({
-    NODE_ENV : debug ? "development" : "production",
-    UBAT_IP: "localhost",
-    UBAT_PORT: "13750"
+    NODE_ENV: 'development',
+    UBAT_URL: 'localhost',
+    UBAT_PORT: '13750'
 });
 
 const copyPlug = new CopyWebpackPlugin([

@@ -12,7 +12,9 @@ let version = execSync('git describe --tags --abbrev=0');
 
 console.log('version ' + version);
 
-console.log("building with NODE_ENV=" + process.env.NODE_ENV);
+console.log('building with NODE_ENV=' + process.env.NODE_ENV);
+console.log('building with UBAT_URL=' + process.env.UBAT_URL);
+console.log('building with UBAT_PORT=' + process.env.UBAT_PORT);
 
 var buildPages = process.env.BUILD_PAGES;
 
@@ -28,10 +30,11 @@ const defPlug = new webpack.DefinePlugin({
     UBAT_VERSION: JSON.stringify(version.toString())
 });
 
+// the default value is taken when the environment variable is not set
 const envPlug = new webpack.EnvironmentPlugin({
-    NODE_ENV: 'development', // use 'development' unless process.env.NODE_ENV is defined
-    UBAT_IP: "localhost",
-    UBAT_PORT: "13750"
+    NODE_ENV: 'development',
+    UBAT_URL: 'localhost',
+    UBAT_PORT: '13750'
 });
 
 const copyPlug = new CopyWebpackPlugin([

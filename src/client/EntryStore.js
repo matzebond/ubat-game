@@ -6,10 +6,11 @@ import Tag from "../data/Tag";
 import Entry from "../data/Entry";
 import Language from "../data/Language";
 
+const backendURL = process.env.UBAT_URL;
+const backendPort = parseInt(process.env.UBAT_PORT, 10);
+const backendAddr = process.env.UBAT_URL === 'localhost' || process.env.UBAT_URL === '0.0.0.0'
+      ? `http://${backendURL}:${backendPort}` : `http://${backendURL}/api`;
 
-const backendIp = process.env.UBAT_IP || "localhost";
-const backendPort = parseInt(process.env.UBAT_PORT, 10) || 13750;
-const backendAddr = `http://${backendIp}:${backendPort}`;
 
 axios.defaults.baseURL = backendAddr;
 axios.defaults.headers.post['Content-Type'] = 'application/json';
